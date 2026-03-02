@@ -5,7 +5,8 @@ const SQRT_PI = sqrt(π)
     unicdf(x::Float64)
 
 CDF of the standard normal distribution, i.e., 
-```math\\Phi(x) = \\mathbb{P}(Z \\le x) = \\frac{1}{2} \\left( 1 + \\operatorname{erf}\\left( \\frac{x}{\\sqrt{2}} \\right) \\right).
+```math
+\\Phi(x) = \\mathbb{P}(Z \\le x) = \\frac{1}{2} \\left( 1 + \\operatorname{erf}\\left( \\frac{x}{\\sqrt{2}} \\right) \\right).
 ```
 """
 unicdf(x::Float64) = 0.5 * (1 + erf(x / SQRT2)) #CDF of N(0, 1)
@@ -39,7 +40,7 @@ const c2 = -0.75651138383854
 
 Output the CDF of the bivariate standard normal distribution with correlation coefficient ρ, i.e.,
 ```math
-\\Phi_{2}(p, q; \\rho) = \\mathbb{P}(Z_1 \\le p, Z_2 \\le q) \\quad \\text{where} \\quad (Z_1, Z_2) \\sim \\mathcal{N}\\left(\\mathbf{0}, \\begin{bmatrix} 1 & \\rho \\\\ \\rho & 1 \\end{bmatrix}\\right)
+\\Phi_{2}(p, q; \\rho) = \\mathbb{P}(Z_1 \\le p, Z_2 \\le q) \\quad \\text{where} \\quad \\begin{bmatrix} Z_1 \\\\ Z_2 \\end{bmatrix} \\sim \\mathcal{N}\\left(\\mathbf{0}, \\begin{bmatrix} 1 & \\rho \\\\ \\rho & 1 \\end{bmatrix}\\right)
 ```
 
     # Arguments
@@ -118,7 +119,28 @@ end
 """
     backproject(q::UnitQuaternion, x1::Float64, x2::Float64, z1::Float64, z2::Float64, z3::Float64, γ::Float64)
 
-Evaluates the point of the tomographic feature map ``\\varphi_{\\gamma}(\\mathbf{R}_{\\mathbf{q}}, \\mathbf{x})(\\mathbf{z})`` analytically.
+Evaluates the point of the tomographic feature map analytically, i.e., computes
+```math
+\\varphi_{\\gamma}(\\mathbf{R}_{\\mathbf{q}}, \\mathbf{x})(\\mathbf{z}) = \\int_{-W(\\mathbf{x})}^{W(\\mathbf{x})} \\exp(-\\gamma \\| \\mathbf{R}_{\\mathbf{q}} \\mathbf{z} - [\\mathbf{x} : z] \\|^2) \\, dz
+```
+
+    # Arguments
+    - `q::UnitQuaternion`: Rotation of the kernel
+    - `x1::Float64`: First coordinate of the kernel center in the plane
+    - `x2::Float64`: Second coordinate of the kernel center in the plane
+    - `z1::Float64`: First coordinate of the evaluation point in 3D space
+    - `z2::Float64`: Second coordinate of the evaluation point in 3D space
+    - `z3::Float64`: Third coordinate of the evaluation point in 3D space
+    - `γ::Float64`: Bandwidth parameter for Gaussian kernel
+
+    # Examples
+    ```
+    julia> q = shortest_arc(0.0, 1.0, 0.0)
+    UnitQuaternion{Float64}(0.7071067811865476, 0.7071067811865475, -0.0, 0.0)
+
+    julia> backproject(q, 0.1, -0.2, 0.3, -0.4, 0.5, 10.0)
+    0.15197718857623893
+    ```
 """
 @inline function backproject(q::UnitQuaternion, x1::Float64, x2::Float64, z1::Float64, z2::Float64, z3::Float64, γ::Float64)
     ω, x, y, z_q = q.ω, q.x, q.y, q.z
@@ -157,10 +179,32 @@ Evaluates the point of the tomographic feature map ``\\varphi_{\\gamma}(\\mathbf
 end
 
 """
-    inner_product(q1::UnitQuaternion, x1_1::Float64, x1_2::Float64, q2::UnitQuaternion, x2_1::Float64, x2_2::Float64, γ::Float64)
+    inner_product(q::UnitQuaternion, x1_1::Float64, x1_2::Float64, q2::UnitQuaternion, x2_1::Float64, x2_2::Float64, γ::Float64)
 
-Analytically computes the inner product ``\\langle \\varphi_{\\gamma} (\\mathbf{R}_{\\mathbf{q}_{1}}, \\mathbf{x}_{1}), \\varphi_{\\gamma} (\\mathbf{R}_{\\mathbf{q}_{2}}, \\mathbf{x}_{2}) \\rangle_{\\mathcal{H}}``.
+Analytically computes the inner product between two tomographic feature maps.
+```math
+\\langle \\varphi_{\\gamma} (\\mathbf{R}_{\\mathbf{q}_{1}}, \\mathbf{x}_{1}), \\varphi_{\\gamma} (\\mathbf{R}_{\\mathbf{q}_{2}}, \\mathbf{x}_{2}) \\rangle_{\\mathcal{H}} =\\int_{-W(\\mathbf{x}_{1})}^{W(\\mathbf{x}_{1})} \int_{-W(\\mathbf{x}_{2})}^{W(\\mathbf{x}_{2})} \\exp \\left( - \\gamma \\|[\\mathbf{x}_{1}:z_{1}] - \\mathbf{R}_{\\mathbf{q}}^{-1} [\\mathbf{x}_{2}:z_{2}]\\|^{2} \\right) \\, dz_{2} \\, d z_{1},
+```
+where ``\\mathbf{q} = \\mathbf{q}_{1} \\mathbf{q}_{2}^{-1}`` is the relative rotation between the two kernels.
 Automatically branches between the collinear and non-collinear integrations.
+
+    # Arguments
+    - `q1::UnitQuaternion`: Rotation of the first kernel
+    - `x1_1::Float64`: First coordinate of the first kernel center in the plane
+    - `x1_2::Float64`: Second coordinate of the first kernel center in the plane
+    - `q2::UnitQuaternion`: Rotation of the second kernel
+    - `x2_1::Float64`: First coordinate of the second kernel center in the plane
+    - `x2_2::Float64`: Second coordinate of the second kernel center in the plane
+    - `γ::Float64`: Bandwidth parameter for Gaussian kernel
+
+    # Examples
+    ```
+    julia> q_id = UnitQuaternion(1.0, 0.0, 0.0, 0.0)
+    UnitQuaternion{Float64}(1.0, 0.0, 0.0, 0.0)
+
+    julia> inner_product(q_id, 0.1, 0.2, q_id, 0.1, 0.2, 10.0)
+    0.9926139338138249
+    ```
 """
 @inline function inner_product(q1::UnitQuaternion, x1_1::Float64, x1_2::Float64, q2::UnitQuaternion, x2_1::Float64, x2_2::Float64, γ::Float64)
     # 1. Relative rotation q = q1 * q2^{-1}

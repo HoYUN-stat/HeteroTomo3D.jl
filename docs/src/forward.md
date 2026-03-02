@@ -6,7 +6,7 @@ CurrentModule = HeteroTomo3D
 
 This section covers the generation of 3D phantoms and the simulation of the 3D X-ray transform via ray casting.
 
-## Phantom Generation
+## 3D Phantom Generation
 ```@docs
 rand_shepp_logan_3d
 TruncationType

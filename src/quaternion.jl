@@ -58,11 +58,11 @@ Returns a Tuple (x, y, z) to guarantee 0 heap allocations.
     )
 end
 
-@doc raw"""
+"""
     planar_rotation(q::UnitQuaternion)
 
 Extracts the first column of the 2D in-plane rotation matrix, 
-i.e., it returns a Tuple (c, s) representing [c -s; s c] ∈ SO(2).
+i.e., it returns a Tuple (c, s) representing ``\\begin{bmatrix} c & -s \\ s & c \\end{bmatrix} \\in SO(2)`` that rotates the detector plane around the projection axis.
 """
 @inline function planar_rotation(q::UnitQuaternion)
     ω, z = q.ω, q.z
@@ -82,7 +82,7 @@ end
 """
     shortest_arc(ux::Real, uy::Real, uz::Real)
 
-Computes the shortest-arc rotation ``\\mathbf{E}(\\mathbf{u}) \\in SO(3)`` mapping ``\\mathbf{e}_3`` to ``\\mathbf{u} \\in \\mathbb{S}^2``. Requires ``\\mathbf{u} \\in \\mathbb{S}^2 \\backslash \\{-\\mathbf{e}_3\\}``.
+Computes the shortest-arc rotation ``\\mathbf{E}(\\mathbf{u}) \\in SO(3)`` mapping ``\\mathbf{e}_3`` to ``\\mathbf{u} \\in \\mathbb{S}^2``. Requires ``\\mathbf{u} \\in \\mathbb{S}^2 \\backslash \\{-\\mathbf{e}_3\\}`` for uniqueness.
 """
 @inline function shortest_arc(ux::Real, uy::Real, uz::Real)
     # Used one(uz) and typeof(uz)(2) for flawless type stability.

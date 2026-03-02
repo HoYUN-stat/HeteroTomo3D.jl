@@ -15,9 +15,8 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Quaternions" => "quaternions.md",
-        "Random Phantom Generation" => "phantom.md",
-        "X-Ray Transform" => "xray.md",
         "Tomographic Kernels" => "tomokernel.md",
+        "Forward Operations" => "forward.md",
     ],
 )
 

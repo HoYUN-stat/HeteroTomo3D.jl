@@ -5,7 +5,7 @@ const SQRT_PI = sqrt(π)
     unicdf(x::Float64)
 
 CDF of the standard normal distribution, i.e., 
-``\\Phi(x) = \\mathbb{P}(Z \le x) = \\frac{1}{2} \left( 1 + \\operatorname{erf}\\left( \\frac{x}{\\sqrt{2}} \\right) \\right)``.
+``\\Phi(x) = \\mathbb{P}(Z \\le x) = \\frac{1}{2} \\left( 1 + \\operatorname{erf}\\left( \\frac{x}{\\sqrt{2}} \\right) \\right)``.
 """
 unicdf(x::Float64) = 0.5 * (1 + erf(x / SQRT2)) #CDF of N(0, 1)
 
@@ -114,7 +114,6 @@ end
     backproject(q::UnitQuaternion, x1::Float64, x2::Float64, z1::Float64, z2::Float64, z3::Float64, γ::Float64)
 
 Evaluates the point of the tomographic feature map ``\\varphi_{\\gamma}(\\mathbf{R}_{\\mathbf{q}}, \\mathbf{x})(\\mathbf{z})`` analytically.
-Returns a pure scalar to guarantee 0 heap allocations.
 """
 @inline function backproject(q::UnitQuaternion, x1::Float64, x2::Float64, z1::Float64, z2::Float64, z3::Float64, γ::Float64)
     ω, x, y, z_q = q.ω, q.x, q.y, q.z
@@ -135,6 +134,7 @@ Returns a pure scalar to guarantee 0 heap allocations.
     R22 = 1.0 - 2.0 * (x * x + z_q * z_q)
     R23 = 2.0 * (y * z_q - ω * x)
 
+    # Projected coordinates in the plane of x1, x2
     pi1 = R11 * z1 + R12 * z2 + R13 * z3
     pi2 = R21 * z1 + R22 * z2 + R23 * z3
 
@@ -151,7 +151,7 @@ Returns a pure scalar to guarantee 0 heap allocations.
     return (sqrt(π) * exp(-γ * dist2) / (2.0 * sqrt_γ)) * (erf(term0) - erf(term1))
 end
 
-@doc raw"""
+"""
     inner_product(q1::UnitQuaternion, x1_1::Float64, x1_2::Float64, q2::UnitQuaternion, x2_1::Float64, x2_2::Float64, γ::Float64)
 
 Analytically computes the inner product ``\\langle \\varphi_{\\gamma} (\\mathbf{R}_{\\mathbf{q}_{1}}, \\mathbf{x}_{1}), \\varphi_{\\gamma} (\\mathbf{R}_{\\mathbf{q}_{2}}, \\mathbf{x}_{2}) \\rangle_{\\mathcal{H}}``.

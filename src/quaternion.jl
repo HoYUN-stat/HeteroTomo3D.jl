@@ -14,11 +14,16 @@ end
 
 """
     conj(q::UnitQuaternion)
-    inv(q::UnitQuaternion)
 
 For a unit quaternion ``\\mathbf{q} = (\\omega, x, y, z)``, the inverse is equal to its conjugate ``\\mathbf{q}^{-1} = (\\omega, -x, -y, -z)``.
 """
 @inline Base.conj(q::UnitQuaternion) = UnitQuaternion(q.ω, -q.x, -q.y, -q.z)
+
+"""
+    inv(q::UnitQuaternion)
+
+For a unit quaternion ``\\mathbf{q} = (\\omega, x, y, z)``, the inverse is equal to its conjugate ``\\mathbf{q}^{-1} = (\\omega, -x, -y, -z)``.
+"""
 @inline Base.inv(q::UnitQuaternion) = conj(q)
 
 """

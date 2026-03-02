@@ -8,6 +8,8 @@ This section provides the rotation geometry for the tomographic pipeline using q
 
 ```@docs
 UnitQuaternion
+Base.conj(::UnitQuaternion)
+Base.inv(::UnitQuaternion)
 Base.:*(::UnitQuaternion, ::UnitQuaternion)
 projection_axis
 planar_rotation

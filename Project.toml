@@ -5,9 +5,11 @@ authors = ["YUN Ho <ho.yun@epfl.ch> and contributors"]
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 
 [compat]
 LinearAlgebra = "1.12.0"
+SpecialFunctions = "2.7.1"
 julia = "1.12"
 
 [extras]

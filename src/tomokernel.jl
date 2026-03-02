@@ -1,9 +1,41 @@
-unicdf(x::Float64) = 0.5 * (1 + erf(x / SQRT2)) #CDF of N(0, 1)
+const SQRT2 = sqrt(2.0)
+const SQRT_PI = sqrt(π)
 
 """
-        bvncdf(p::Float64, q::Float64, ρ::Float64)::Float64
+    unicdf(x::Float64)
 
-    Output the CDF of the bivariate standard normal distribution.
+CDF of the standard normal distribution, i.e., 
+``\\Phi(x) = \\mathbb{P}(Z \le x) = \\frac{1}{2} \left( 1 + \\operatorname{erf}\\left( \\frac{x}{\\sqrt{2}} \\right) \\right)``.
+"""
+unicdf(x::Float64) = 0.5 * (1 + erf(x / SQRT2)) #CDF of N(0, 1)
+
+
+
+"""
+    antid_erf(z::Float64)::Float64
+
+Compute the antiderivative ``\\Phi(z)`` of ``f(z) = \\sqrt{\\pi} \\operatorname{erf}(z)``, i.e.,
+    ``\\Phi(z) =  \\int_{0}^{z} f(z) \\, dz + e^{-1} = \\sqrt{\\pi} z \\operatorname{erf}(z) + \\exp(- z^{2})``.
+
+    # Examples
+    ```
+    julia> antid_erf(2.0)
+    3.5466412019384204
+    ```
+"""
+function antid_erf(z::Float64)::Float64
+    return SQRT_PI * z * erf(z) + exp(-z^2)
+end
+
+# Precomputed constants for the bivariate normal CDF approximation
+const c1 = -1.0950081470333
+const c2 = -0.75651138383854
+
+"""
+    bvncdf(p::Float64, q::Float64, ρ::Float64)::Float64
+
+Output the CDF of the bivariate standard normal distribution with correlation coefficient ρ, i.e.,
+``\\Phi_{2}(p, q; \\rho) = \\mathbb{P}(Z_1 \\le p, Z_2 \\le q)`` where ``(Z_1, Z_2) \\sim \\mathcal{N}(\\mathbf{0}, \\begin{bmatrix} 1 & \\rho \\ \\rho & 1 \\end{bmatrix})``.
 
     # Arguments
     - `p::Float64`: First input
@@ -75,4 +107,117 @@ function bvncdf(p::Float64, q::Float64, ρ::Float64)::Float64
     end
 
     return cdf
+end
+
+
+"""
+    backproject(q::UnitQuaternion, x1::Float64, x2::Float64, z1::Float64, z2::Float64, z3::Float64, γ::Float64)
+
+Evaluates the point of the tomographic feature map ``\\varphi_{\\gamma}(\\mathbf{R}_{\\mathbf{q}}, \\mathbf{x})(\\mathbf{z})`` analytically.
+Returns a pure scalar to guarantee 0 heap allocations.
+"""
+@inline function backproject(q::UnitQuaternion, x1::Float64, x2::Float64, z1::Float64, z2::Float64, z3::Float64, γ::Float64)
+    ω, x, y, z_q = q.ω, q.x, q.y, q.z
+
+    # 1. Compute projection axis r_q
+    rq_x = 2.0 * (x * z_q - ω * y)
+    rq_y = 2.0 * (y * z_q + ω * x)
+    rq_z = 1.0 - 2.0 * (x * x + y * y)
+
+    z_dot_rq = z1 * rq_x + z2 * rq_y + z3 * rq_z
+
+    # 2. Extract first two rows of R_q applied to z
+    R11 = 1.0 - 2.0 * (y * y + z_q * z_q)
+    R12 = 2.0 * (x * y - ω * z_q)
+    R13 = 2.0 * (x * z_q + ω * y)
+
+    R21 = 2.0 * (x * y + ω * z_q)
+    R22 = 1.0 - 2.0 * (x * x + z_q * z_q)
+    R23 = 2.0 * (y * z_q - ω * x)
+
+    pi1 = R11 * z1 + R12 * z2 + R13 * z3
+    pi2 = R21 * z1 + R22 * z2 + R23 * z3
+
+    # 3. Squared distance
+    dist2 = (x1 - pi1)^2 + (x2 - pi2)^2
+
+    # 4. Integration limits (W(x) function)
+    W_x = sqrt(max(0.0, 1.0 - x1 * x1 - x2 * x2))
+
+    sqrt_γ = sqrt(γ)
+    term0 = sqrt_γ * (W_x - z_dot_rq)
+    term1 = sqrt_γ * (-W_x - z_dot_rq)
+
+    return (sqrt(π) * exp(-γ * dist2) / (2.0 * sqrt_γ)) * (erf(term0) - erf(term1))
+end
+
+@doc raw"""
+    inner_product(q1::UnitQuaternion, x1_1::Float64, x1_2::Float64, q2::UnitQuaternion, x2_1::Float64, x2_2::Float64, γ::Float64)
+
+Analytically computes the inner product ``\\langle \\varphi_{\\gamma} (\\mathbf{R}_{\\mathbf{q}_{1}}, \\mathbf{x}_{1}), \\varphi_{\\gamma} (\\mathbf{R}_{\\mathbf{q}_{2}}, \\mathbf{x}_{2}) \\rangle_{\\mathcal{H}}``.
+Automatically branches between the collinear and non-collinear integrations.
+"""
+@inline function inner_product(q1::UnitQuaternion, x1_1::Float64, x1_2::Float64, q2::UnitQuaternion, x2_1::Float64, x2_2::Float64, γ::Float64)
+    # 1. Relative rotation q = q1 * q2^{-1}
+    q = q1 * inv(q2)
+    ω, x, y, z = q.ω, q.x, q.y, q.z
+
+    x2py2 = x * x + y * y
+    ω2pz2 = ω * ω + z * z
+    rq = 1.0 - 2.0 * x2py2
+
+    # Limit variables
+    W1 = sqrt(max(0.0, 1.0 - x1_1 * x1_1 - x1_2 * x1_2))
+    W2 = sqrt(max(0.0, 1.0 - x2_1 * x2_1 - x2_2 * x2_2))
+
+    if rq ≈ 1.0
+        # --- COLLINEAR AXES ---
+        inv_n2 = 1.0 / ω2pz2
+        R11 = (ω * ω - z * z) * inv_n2
+        R12 = 2.0 * ω * z * inv_n2
+
+        # Apply inverse planar rotation to x2
+        rot_x2_1 = R11 * x2_1 + R12 * x2_2
+        rot_x2_2 = -R12 * x2_1 + R11 * x2_2
+
+        dist2 = (x1_1 - rot_x2_1)^2 + (x1_2 - rot_x2_2)^2
+
+        sqrt_γ = sqrt(γ)
+
+        # antid_erf is identical to Phi(z) up to the -1 constant, which cancels perfectly in this alternating sum.
+        sum_phi = antid_erf(sqrt_γ * (W1 + W2)) -
+                  antid_erf(sqrt_γ * (W1 - W2)) -
+                  antid_erf(sqrt_γ * (-W1 + W2)) +
+                  antid_erf(sqrt_γ * (-W1 - W2))
+
+        return (1.0 / (2.0 * γ)) * exp(-γ * dist2) * sum_phi
+
+    else
+        # --- NON-COLLINEAR AXES ---
+        inv_ω2pz2 = 1.0 / ω2pz2
+        inv_w = 0.5 / sqrt(x2py2 * ω2pz2) # Precompute for scaling
+        w_rq = 2.0 * sqrt(x2py2 * ω2pz2)
+
+        # Extract 1D planar components for x2
+        x2_1_mapped = ((ω * ω - z * z) * x2_1 + 2.0 * ω * z * x2_2) * inv_ω2pz2
+        x2_2_mapped = (-2.0 * ω * z * x2_1 + (ω * ω - z * z) * x2_2) * inv_ω2pz2
+
+        # Extract 1D planar components for x1
+        x1_1_mapped = ((y * z + ω * x) * x1_1 + (ω * y - x * z) * x1_2) * inv_w
+        x1_2_mapped = ((x * z - ω * y) * x1_1 + (y * z + ω * x) * x1_2) * inv_w
+
+        μ1 = rq * x1_2_mapped - x2_2_mapped
+        μ2 = x1_2_mapped - rq * x2_2_mapped
+
+        sqrt_2γ = sqrt(2.0 * γ)
+
+        cdf00 = bvncdf(sqrt_2γ * (w_rq * W1 - μ1), sqrt_2γ * (w_rq * W2 - μ2), rq)
+        cdf01 = bvncdf(sqrt_2γ * (w_rq * W1 - μ1), sqrt_2γ * (-w_rq * W2 - μ2), rq)
+        cdf10 = bvncdf(sqrt_2γ * (-w_rq * W1 - μ1), sqrt_2γ * (w_rq * W2 - μ2), rq)
+        cdf11 = bvncdf(sqrt_2γ * (-w_rq * W1 - μ1), sqrt_2γ * (-w_rq * W2 - μ2), rq)
+
+        sum_cdf = cdf00 - cdf01 - cdf10 + cdf11
+
+        return (π * exp(-γ * (x1_1_mapped - x2_1_mapped)^2)) / (γ * w_rq) * sum_cdf
+    end
 end

@@ -1,5 +1,3 @@
-using Random
-
 """
     TruncationType
 
@@ -19,7 +17,7 @@ struct Gudermannian <: TruncationType
     γ::Float64
 end
 
-@doc """
+"""
     truncation(r2::Float64, trunc::TruncationType)
 
 Computes the smooth boundary truncation value using multiple dispatch for zero-allocation performance.
@@ -43,7 +41,7 @@ end
     return t1 / (t1 + t2)
 end
 
-@doc """
+"""
     rand_shepp_logan_3d(m::Int; \\lambda=2.0, seed=nothing, trunc=nothing)
 
 Generates an ``m \\times m \\times m`` random 3D Shepp-Logan phantom inscribed in a unit sphere.

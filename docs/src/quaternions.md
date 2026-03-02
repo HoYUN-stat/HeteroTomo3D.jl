@@ -1,3 +1,7 @@
+```@meta
+CurrentModule = HeteroTomo3D
+```
+
 # 3D Rotations (Quaternions)
 
 This section provides the rotation geometry for the tomographic pipeline using quaternions robust to Gimbal-lock.

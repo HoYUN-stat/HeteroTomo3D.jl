@@ -183,7 +183,7 @@ end
 
 Analytically computes the inner product between two tomographic feature maps.
 ```math
-\\langle \\varphi_{\\gamma} (\\mathbf{R}_{\\mathbf{q}_{1}}, \\mathbf{x}_{1}), \\varphi_{\\gamma} (\\mathbf{R}_{\\mathbf{q}_{2}}, \\mathbf{x}_{2}) \\rangle_{\\mathcal{H}} =\\int_{-W(\\mathbf{x}_{1})}^{W(\\mathbf{x}_{1})} \int_{-W(\\mathbf{x}_{2})}^{W(\\mathbf{x}_{2})} \\exp \\left( - \\gamma \\|[\\mathbf{x}_{1}:z_{1}] - \\mathbf{R}_{\\mathbf{q}}^{-1} [\\mathbf{x}_{2}:z_{2}]\\|^{2} \\right) \\, dz_{2} \\, d z_{1},
+\\langle \\varphi_{\\gamma} (\\mathbf{R}_{\\mathbf{q}_{1}}, \\mathbf{x}_{1}), \\varphi_{\\gamma} (\\mathbf{R}_{\\mathbf{q}_{2}}, \\mathbf{x}_{2}) \\rangle_{\\mathcal{H}} =\\int_{-W(\\mathbf{x}_{1})}^{W(\\mathbf{x}_{1})} \\int_{-W(\\mathbf{x}_{2})}^{W(\\mathbf{x}_{2})} \\exp \\left( - \\gamma \\|[\\mathbf{x}_{1}:z_{1}] - \\mathbf{R}_{\\mathbf{q}}^{-1} [\\mathbf{x}_{2}:z_{2}]\\|^{2} \\right) \\, dz_{2} \\, d z_{1},
 ```
 where ``\\mathbf{q} = \\mathbf{q}_{1} \\mathbf{q}_{2}^{-1}`` is the relative rotation between the two kernels.
 Automatically branches between the collinear and non-collinear integrations.

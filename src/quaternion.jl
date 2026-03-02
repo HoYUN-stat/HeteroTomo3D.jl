@@ -1,9 +1,9 @@
 import Base: inv, conj, *
 
-"""
+raw"""
     UnitQuaternion{T<:Real}
 
-Represents a unit quaternion q = (ω, x, y, z) ∈ S^3 for singularity-free 3D rotations.
+Represents a unit quaternion ``\mathbf{q} = (\omega, x, y, z) \in \mathbb{S}^{3}`` for singularity-free 3D rotations.
 """
 struct UnitQuaternion{T<:Real}
     ω::T
@@ -12,19 +12,19 @@ struct UnitQuaternion{T<:Real}
     z::T
 end
 
-"""
+raw"""
     conj(q::UnitQuaternion)
     inv(q::UnitQuaternion)
 
-For a unit quaternion, the inverse is equal to its conjugate (ω, -x, -y, -z).
+For a unit quaternion ``\mathbf{q} = (\omega, x, y, z)``, the inverse is equal to its conjugate ``\mathbf{q}^{-1} = (\omega, -x, -y, -z)``.
 """
 @inline Base.conj(q::UnitQuaternion) = UnitQuaternion(q.ω, -q.x, -q.y, -q.z)
 @inline Base.inv(q::UnitQuaternion) = conj(q)
 
-"""
+raw"""
     *(q1::UnitQuaternion, q2::UnitQuaternion)
 
-Overloads the multiplication operator to compose two rotations: R_{q1} R_{q2} = R_{q1 q2}.
+Overloads the multiplication operator to compose two rotations: ``\mathbf{R}_{\mathbf{q}_1} \mathbf{R}_{\mathbf{q}_2} = \mathbf{R}_{\mathbf{q}_1 \mathbf{q}_2} \in SO(3)``.
 """
 @inline function Base.:*(q1::UnitQuaternion, q2::UnitQuaternion)
     ω1, x1, y1, z1 = q1.ω, q1.x, q1.y, q1.z
@@ -38,10 +38,10 @@ Overloads the multiplication operator to compose two rotations: R_{q1} R_{q2} = 
     )
 end
 
-"""
+raw"""
     projection_axis(q::UnitQuaternion)
 
-Extracts the projection axis r_q = R_{q}^{-1} e_3 ∈ S^2.
+Extracts the projection axis ``\mathbf{r}_{\mathbf{q}} = \mathbf{R}_{\mathbf{q}}^{-1} \mathbf{e}_3 \in \mathbb{S}^2``.
 Returns a Tuple (x, y, z) to guarantee 0 heap allocations.
 """
 @inline function projection_axis(q::UnitQuaternion)
@@ -53,10 +53,10 @@ Returns a Tuple (x, y, z) to guarantee 0 heap allocations.
     )
 end
 
-"""
+raw"""
     planar_rotation(q::UnitQuaternion)
 
-Extracts the first column of the 2D in-plane rotation matrix (SO(2) component), 
+Extracts the first column of the 2D in-plane rotation matrix, 
 i.e., it returns a Tuple (c, s) representing [c -s; s c] ∈ SO(2).
 """
 @inline function planar_rotation(q::UnitQuaternion)
@@ -74,11 +74,10 @@ i.e., it returns a Tuple (c, s) representing [c -s; s c] ∈ SO(2).
     return (c, s)
 end
 
-"""
+raw"""
     shortest_arc(ux::Real, uy::Real, uz::Real)
 
-Computes the shortest-arc rotation E(u) ∈ SO(3) mapping e_3 to u ∈ S^2.
-Requires u ∈ S^2 - {-e_3}.
+Computes the shortest-arc rotation ``\mathbf{E}(\mathbf{u}) \in SO(3)`` mapping ``\mathbf{e}_3`` to ``\mathbf{u} \in \mathbb{S}^2``. Requires ``\mathbf{u} \in \mathbb{S}^2 \backslash \{-\mathbf{e}_3\}``.
 """
 @inline function shortest_arc(ux::Real, uy::Real, uz::Real)
     # Used one(uz) and typeof(uz)(2) for flawless type stability.

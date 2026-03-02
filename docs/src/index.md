@@ -2,13 +2,8 @@
 CurrentModule = HeteroTomo3D
 ```
 
-# HeteroTomo3D
+# HeteroTomo3D.jl
 
-Documentation for [HeteroTomo3D](https://github.com/HoYUN-stat/HeteroTomo3D.jl).
+Welcome to the documentation for [HeteroTomo3D](https://github.com/HoYUN-stat/HeteroTomo3D.jl).
 
-```@index
-```
-
-```@autodocs
-Modules = [HeteroTomo3D]
-```
+This package provides nonparametric estimation of conformational variability from tomographic data using tensorized Krylov methods in a Reproducing Kernel Hilbert Space (RKHS).

@@ -15,6 +15,7 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Quaternions" => "quaternions.md",
+        "Tomographic Kernels" => "tomokernel.md",
     ],
 )
 

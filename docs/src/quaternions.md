@@ -8,3 +8,4 @@ Base.:*(::UnitQuaternion, ::UnitQuaternion)
 projection_axis
 planar_rotation
 shortest_arc
+```

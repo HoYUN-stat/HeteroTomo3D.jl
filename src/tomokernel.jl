@@ -5,7 +5,8 @@ const SQRT_PI = sqrt(π)
     unicdf(x::Float64)
 
 CDF of the standard normal distribution, i.e., 
-``\\Phi(x) = \\mathbb{P}(Z \\le x) = \\frac{1}{2} \\left( 1 + \\operatorname{erf}\\left( \\frac{x}{\\sqrt{2}} \\right) \\right)``.
+```math\\Phi(x) = \\mathbb{P}(Z \\le x) = \\frac{1}{2} \\left( 1 + \\operatorname{erf}\\left( \\frac{x}{\\sqrt{2}} \\right) \\right).
+```
 """
 unicdf(x::Float64) = 0.5 * (1 + erf(x / SQRT2)) #CDF of N(0, 1)
 
@@ -15,7 +16,9 @@ unicdf(x::Float64) = 0.5 * (1 + erf(x / SQRT2)) #CDF of N(0, 1)
     antid_erf(z::Float64)::Float64
 
 Compute the antiderivative ``\\Phi(z)`` of ``f(z) = \\sqrt{\\pi} \\operatorname{erf}(z)``, i.e.,
-    ``\\Phi(z) =  \\int_{0}^{z} f(z) \\, dz + e^{-1} = \\sqrt{\\pi} z \\operatorname{erf}(z) + \\exp(- z^{2})``.
+```math
+\\Phi(z) =  \\int_{0}^{z} f(z) \\, dz + e^{-1} = \\sqrt{\\pi} z \\operatorname{erf}(z) + \\exp(- z^{2}).
+```
 
     # Examples
     ```
@@ -35,7 +38,9 @@ const c2 = -0.75651138383854
     bvncdf(p::Float64, q::Float64, ρ::Float64)::Float64
 
 Output the CDF of the bivariate standard normal distribution with correlation coefficient ρ, i.e.,
-``\\Phi_{2}(p, q; \\rho) = \\mathbb{P}(Z_1 \\le p, Z_2 \\le q)`` where ``(Z_1, Z_2) \\sim \\mathcal{N}(\\mathbf{0}, \\begin{bmatrix} 1 & \\rho \\ \\rho & 1 \\end{bmatrix})``.
+```math
+\\Phi_{2}(p, q; \\rho) = \\mathbb{P}(Z_1 \\le p, Z_2 \\le q) \\quad \\text{where} \\quad (Z_1, Z_2) \\sim \\mathcal{N}\\left(\\mathbf{0}, \\begin{bmatrix} 1 & \\rho \\\\ \\rho & 1 \\end{bmatrix}\\right)
+```
 
     # Arguments
     - `p::Float64`: First input

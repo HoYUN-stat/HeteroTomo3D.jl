@@ -1,5 +1,5 @@
 using HeteroTomo3D
-using GLMakie # Switched to GLMakie for native 3D rendering!
+using GLMakie # Switched to GLMakie for native 3D rendering
 
 # 1. Generate the Phantom and Projections
 m = 100

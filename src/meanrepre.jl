@@ -4,7 +4,7 @@
 Constructs the `(s * r * n) x (s * r * n)` Gram matrix `K` for the mean representer theorem.
 Iterates over functions (i), quaternions (j), and evaluation points (k), i.e.,
 ```math
-K[k1 + (j1 - 1) * s + (i1 - 1) * s * r, k2 + (j2 - 1) * s + (i2 - 1) * s * r] = \\langle \\varphi(\\mathbf{R}_{\\mathbf{q}_{i1, j1}} \\mathbf{x}_{i1, j1, k1}), \\varphi(\\mathbf{R}_{\\mathbf{q}_{i2, j2}} \\mathbf{x}_{i2, j2, k2}) \\rangle_{\\mathbb{H}}
+\\mahtbf{K}[k_{1} + (j_{1} - 1) s + (i_{1} - 1) s r, k_{2} + (j_{2} - 1) s + (i_{2} - 1) s r] = \\langle \\varphi(\\mathbf{R}_{\\mathbf{q}_{i_{1} j_{1}}} \\mathbf{x}_{i_{1} j_{1} k_{1}}), \\varphi(\\mathbf{R}_{\\mathbf{q}_{i_{2} j_{2}}} \\mathbf{x}_{i_{2} j_{2} k_{2}}) \\rangle_{\\mathbb{H}}
 ```
 """
 function build_mean_gram!(K::Matrix{Float64}, X::EvaluationGrid{Float64}, Q::QuaternionGrid{Float64}, γ::Float64)
@@ -63,10 +63,10 @@ Solves the regularized system `(K + λI) a = y` for the mean representer theorem
 function solve_mean!(a::Vector{Float64}, K::Matrix{Float64}, y::Vector{Float64}, λ::Float64)
     N = size(K, 1)
 
-    # Allocate exactly one copy so K is not destroyed by the factorization
+    # Allocate one copy so K is not destroyed by the factorization
     K_reg = copy(K)
 
-    # Add Tikhonov regularization strictly to the diagonal elements
+    # Tikhonov regularization
     @inbounds @simd for i in 1:N
         K_reg[i, i] += λ
     end

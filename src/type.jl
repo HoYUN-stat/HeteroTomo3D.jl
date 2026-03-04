@@ -1,24 +1,24 @@
 """
-        EvaluationGrid{T<:Real}
+    EvaluationGrid{T<:Real}
 
-    4D array of size `(2, s, r, n)` storing the detector coordinates for X-ray evaluation, i.e.,
-    ```math
-    \\mathbf{x}_{ijk} = X[:, k, j, i] \\in \\mathbb{B}^{2}
-    ```
-    # Fields
-    - `block::Array{T, 4}`: 4D array of size `(2, s, r, n)` for 2D detector plane coordinates.
-    - `s::Int64`: Number of evaluation points per view.
-    - `r::Int64`: Number of projection angles.
-    - `n::Int64`: Number of 3D functions.
+4D array of size `(2, s, r, n)` storing the detector coordinates for X-ray evaluation, i.e.,
+```math
+\\mathbf{x}_{ijk} = X[:, k, j, i] \\in \\mathbb{B}^{2}
+```
+# Fields
+- `block::Array{T, 4}`: 4D array of size `(2, s, r, n)` for 2D detector plane coordinates.
+- `s::Int64`: Number of evaluation points per view.
+- `r::Int64`: Number of projection angles.
+- `n::Int64`: Number of 3D functions.
 
-    # Examples
-    ```julia-repl
-    julia> s, r, n = 20, 5, 100;
-        block = rand(2, s, r, n);
-        eval_grid = EvaluationGrid(block, s, r, n);
-        size(eval_grid)
-    (2, 20, 5, 100)
-    ```
+# Examples
+```julia-repl
+julia> s, r, n = 20, 5, 100;
+julia> block = rand(2, s, r, n);
+julia> eval_grid = EvaluationGrid(block, s, r, n);
+julia> size(eval_grid)
+(2, 20, 5, 100)
+```
 """
 struct EvaluationGrid{T<:Real}
     block::Array{T,4}
@@ -31,17 +31,17 @@ Base.size(X::EvaluationGrid) = (2, X.s, X.r, X.n)
 Base.size(X::EvaluationGrid, i::Int) = size(X)[i]
 
 """
-        QuaternionGrid{T<:Real}
+    QuaternionGrid{T<:Real}
 
-    Matrix of `UnitQuaternion{T}` of size `(r, n)` for singularity-free 3D rotation angles.
-    ```math
-    \\mathbf{q}_{jk} = Q[k, j] \\in \\mathbb{S}^{3}
-    ```
+Matrix of `UnitQuaternion{T}` of size `(r, n)` for singularity-free 3D rotation angles.
+```math
+\\mathbf{q}_{jk} = Q[k, j] \\in \\mathbb{S}^{3}
+```
 
-    # Fields
-    - `block::Matrix{UnitQuaternion{T}}`: Matrix of size `(r, n)` containing the rotation geometry.
-    - `r::Int64`: Number of projection angles.
-    - `n::Int64`: Number of 3D functions.
+# Fields
+- `block::Matrix{UnitQuaternion{T}}`: Matrix of size `(r, n)` containing the rotation geometry.
+- `r::Int64`: Number of projection angles.
+- `n::Int64`: Number of 3D functions.
 """
 struct QuaternionGrid{T<:Real}
     block::Matrix{UnitQuaternion{T}}
@@ -54,23 +54,23 @@ Base.size(Q::QuaternionGrid) = (Q.r, Q.n)
 
 
 """
-        BlockDiag{T<:Real}
+    BlockDiag{T<:Real}
 
-    Block diagonal matrix representing the coefficients with respect to the tensorized basis functions for covariance estimation, i.e.,
-    ```math
-    \\hat{\\mathbf{B}} \\in \\bigoplus_{i=1}^{n} \\mathbb{R}^{(s \\cdot r) \\times (s \\cdot r)} \\implies 
-    \\hat{\\mathbf{\\Sigma}} = \\sum_{i=1}^{n} \\sum_{(j_{1}, k_{1})} \\sum_{(j_{2}, k_{2})} \\hat{B}_{i, (j_{1}, k_{1}), (j_{2}, k_{2})} \\varphi_{i j_{1} k_{1}} \\otimes \\varphi_{i j_{2} k_{2}} \\in \\mathbb{H} \\otimes \\mathbb{H}.
-    ```
+Block diagonal matrix representing the coefficients with respect to the tensorized basis functions for covariance estimation, i.e.,
+```math
+\\hat{\\mathbf{B}} \\in \\bigoplus_{i=1}^{n} \\mathbb{R}^{(s \\cdot r) \\times (s \\cdot r)} \\implies 
+\\hat{\\mathbf{\\Sigma}} = \\sum_{i=1}^{n} \\sum_{(j_{1}, k_{1})} \\sum_{(j_{2}, k_{2})} \\hat{B}_{i, (j_{1}, k_{1}), (j_{2}, k_{2})} \\varphi_{i j_{1} k_{1}} \\otimes \\varphi_{i j_{2} k_{2}} \\in \\mathbb{H} \\otimes \\mathbb{H}.
+```
 
-    Thread-safe pre-allocated buffers are included for zero-allocation `mul!` operations in Krylov solvers, to guarantee no heap allocations during multithreaded linear algebra operations.
+Thread-safe pre-allocated buffers are included for zero-allocation `mul!` operations in Krylov solvers, to guarantee no heap allocations during multithreaded linear algebra operations.
 
-    # Fields
-    - `block::Array{T, 3}`: Saving the diagonal blocks `[:, :, i]`, with each of size `(s * r, s * r)`.
-    - `s::Int64`: Number of evaluation points.
-    - `r::Int64`: Number of projection angles.
-    - `n::Int64`: Number of 3D functions.
-    - `temp::Vector{Matrix{T}}`: Thread-local temp buffers for `mul!` of length `Threads.nthreads()`, isolating memory per CPU core.
-    - `iter::Int64`: Iteration count for Krylov solvers, initialized to 0.
+# Fields
+- `block::Array{T, 3}`: Saving the diagonal blocks `[:, :, i]`, with each of size `(s * r, s * r)`.
+- `s::Int64`: Number of evaluation points.
+- `r::Int64`: Number of projection angles.
+- `n::Int64`: Number of 3D functions.
+- `temp::Vector{Matrix{T}}`: Thread-local temp buffers for `mul!` of length `Threads.nthreads()`, isolating memory per CPU core.
+- `iter::Int64`: Iteration count for Krylov solvers, initialized to 0.
 """
 mutable struct BlockDiag{T<:Real}
     block::Array{T,3}
@@ -94,29 +94,29 @@ Base.size(B::BlockDiag, i::Int) = size(B)[i]
 
 
 """
-        LazyKhatri{T<:Real}
+    LazyKhatri{T<:Real}
 
-    Khatri-Rao product of Gram matrix `K`, i.e., `K ⊙ K`.
-    Bypasses generating massive dense matrices by evaluating on-the-fly in the matrix-free manner.
-    In other words, given a block diagonal matrix `B = \\operatorname{Diag}[B_{i}]_{i=1}^{n}`, `mul!(C, khatK, B)` updates a block diagonal matrix `C = \\operatorname{Diag}[C_{i}]_{i=1}^{n}` in-place according to the formula:
-    ```math
-    \\mathbf{C}_{i} = \\sum_{i'=1}^{n} \\mathbf{K}_{i, i'} \\mathbf{B}_{i'} \\mathbf{K}_{i', i}
-    ```
+Khatri-Rao product of Gram matrix `K`, i.e., `K ⊙ K`.
+Bypasses generating massive dense matrices by evaluating on-the-fly in the matrix-free manner.
+In other words, given a block diagonal matrix `B = \\operatorname{Diag}[B_{i}]_{i=1}^{n}`, `mul!(C, khatK, B)` updates a block diagonal matrix `C = \\operatorname{Diag}[C_{i}]_{i=1}^{n}` in-place according to the formula:
+```math
+\\mathbf{C}_{i} = \\sum_{i'=1}^{n} \\mathbf{K}_{i, i'} \\mathbf{B}_{i'} \\mathbf{K}_{i', i}
+```
 
-    # Fields
-    - `K::Matrix{T}`: Base Gram matrix of size `(s * r * n, s * r * n)`.
-    - `s::Int64`: Number of evaluation points.
-    - `r::Int64`: Number of projection angles.
-    - `n::Int64`: Number of 3D functions.
+# Fields
+- `K::Matrix{T}`: Base Gram matrix of size `(s * r * n, s * r * n)`.
+- `s::Int64`: Number of evaluation points.
+- `r::Int64`: Number of projection angles.
+- `n::Int64`: Number of 3D functions.
 
-    # Examples
-    ```julia-repl
-    julia> s, r, n = 2, 4, 5;
-        K = rand(s * r * n, s * r * n);
-        khatK = LazyKhatri(K, s, r, n);
-        size(khatK)
-    (320, 320)
-    ```
+# Examples
+```julia-repl
+julia> s, r, n = 2, 4, 5;
+    K = rand(s * r * n, s * r * n);
+    khatK = LazyKhatri(K, s, r, n);
+    size(khatK)
+(320, 320)
+```
 """
 struct LazyKhatri{T<:Real}
     K::Matrix{T}

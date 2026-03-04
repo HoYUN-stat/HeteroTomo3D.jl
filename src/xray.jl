@@ -57,14 +57,14 @@ end
 
 Computes the 3D X-ray transform (projection) for an array of `UnitQuaternion` rotations:
 ```math
-\\mathcal{P}(f)(\\mathbf{R}_{\\mathbf{q}}, \\mathbf{u}) = \\int_{-W(\\mathbf{u})}^{W(\\mathbf{u})} f(\\mathbf{R}_{\\mathbf{q}}^{-1} [\\mathbf{u} : z]) \\, dz
+\\mathcal{P}_{\\mathbf{R}_{\\mathbf{q}}}f(\\mathbf{x}) = \\int_{-W(\\mathbf{x})}^{W(\\mathbf{x})} f(\\mathbf{R}_{\\mathbf{q}}^{-1} [\\mathbf{x} : z]) \\, dz
 ```
 Returns a 3D array of size ``m \\times m \\times r`` where `r` is the number of projections (`UnitQuaternion`).
 
-    # Arguments
-    - `volume::Array{Float64, 3}`: The input 3D volume to be projected. Must be a cube of size `m x m x m`.
-    - `quats::AbstractVector{UnitQuaternion{Float64}}`: An array of `UnitQuaternion` representing the projection angles. Each quaternion defines a unique projection direction.
-    - `n_steps::Int`: The number of steps for ray marching along the projection direction. Default is `size(volume, 1)` for a balance between accuracy and performance.
+# Arguments
+- `volume::Array{Float64, 3}`: The input 3D volume to be projected. Must be a cube of size `m x m x m`.
+- `quats::AbstractVector{UnitQuaternion{Float64}}`: An array of `UnitQuaternion` representing the projection angles. Each quaternion defines a unique projection direction.
+- `n_steps::Int`: The number of steps for ray marching along the projection direction. Default is `size(volume, 1)` for a balance between accuracy and performance.
 """
 function xray_transform(volume::Array{Float64,3}, quats::AbstractVector{UnitQuaternion{Float64}}; n_steps::Int=size(volume, 1))
     m = size(volume, 1)

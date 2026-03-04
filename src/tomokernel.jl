@@ -21,11 +21,11 @@ Compute the antiderivative ``\\Phi(z)`` of ``f(z) = \\sqrt{\\pi} \\operatorname{
 \\Phi(z) =  \\int_{0}^{z} f(z) \\, dz + e^{-1} = \\sqrt{\\pi} z \\operatorname{erf}(z) + \\exp(- z^{2}).
 ```
 
-    # Examples
-    ```julia-repl
-    julia> antid_erf(2.0)
-    3.5466412019384204
-    ```
+# Examples
+```julia-repl
+julia> antid_erf(2.0)
+3.5466412019384204
+```
 """
 function antid_erf(z::Float64)::Float64
     return SQRT_PI * z * erf(z) + exp(-z^2)
@@ -43,20 +43,20 @@ Output the CDF of the bivariate standard normal distribution with correlation co
 \\Phi_{2}(p, q; \\rho) = \\mathbb{P}(Z_1 \\le p, Z_2 \\le q) \\quad \\text{where} \\quad \\begin{bmatrix} Z_1 \\\\ Z_2 \\end{bmatrix} \\sim \\mathcal{N}\\left(\\mathbf{0}, \\begin{bmatrix} 1 & \\rho \\\\ \\rho & 1 \\end{bmatrix}\\right)
 ```
 
-    # Arguments
-    - `p::Float64`: First input
-    - `q::Float64`: Second input
-    - `ρ::Float64`: Correlation coefficient in [-1, 1]
+# Arguments
+- `p::Float64`: First input
+- `q::Float64`: Second input
+- `ρ::Float64`: Correlation coefficient in [-1, 1]
 
-    # Examples
-    ```julia-repl
-    julia> @btime 10^5 * bvncdf(-2.0, -2.0 , 0.0)
-    34.323 ns (0 allocations: 0 bytes)
-    51.75685036595643
-    ```
+# Examples
+```julia-repl
+julia> @btime 10^5 * bvncdf(-2.0, -2.0 , 0.0)
+34.323 ns (0 allocations: 0 bytes)
+51.75685036595643
+```
 
-    # Reference
-    Tsay, Wen-Jen, and Peng-Hsuan Ke, A simple approximation for the bivariate normal integral (2021)
+# Reference
+Tsay, Wen-Jen, and Peng-Hsuan Ke, A simple approximation for the bivariate normal integral (2021)
 """
 function bvncdf(p::Float64, q::Float64, ρ::Float64)::Float64
     @assert -1 ≤ ρ ≤ 1
@@ -124,23 +124,23 @@ Evaluates the point of the tomographic feature map analytically, i.e., computes
 \\varphi_{\\gamma}(\\mathbf{R}_{\\mathbf{q}}, \\mathbf{x})(\\mathbf{z}) = \\int_{-W(\\mathbf{x})}^{W(\\mathbf{x})} \\exp(-\\gamma \\| \\mathbf{R}_{\\mathbf{q}} \\mathbf{z} - [\\mathbf{x} : z] \\|^2) \\, dz
 ```
 
-    # Arguments
-    - `q::UnitQuaternion`: Rotation of the kernel
-    - `x1::Float64`: First coordinate of the kernel center in the plane
-    - `x2::Float64`: Second coordinate of the kernel center in the plane
-    - `z1::Float64`: First coordinate of the evaluation point in 3D space
-    - `z2::Float64`: Second coordinate of the evaluation point in 3D space
-    - `z3::Float64`: Third coordinate of the evaluation point in 3D space
-    - `γ::Float64`: Bandwidth parameter for Gaussian kernel
+# Arguments
+- `q::UnitQuaternion`: Rotation of the kernel
+- `x1::Float64`: First coordinate of the kernel center in the plane
+- `x2::Float64`: Second coordinate of the kernel center in the plane
+- `z1::Float64`: First coordinate of the evaluation point in 3D space
+- `z2::Float64`: Second coordinate of the evaluation point in 3D space
+- `z3::Float64`: Third coordinate of the evaluation point in 3D space
+- `γ::Float64`: Bandwidth parameter for Gaussian kernel
 
-    # Examples
-    ```julia-repl
-    julia> q = shortest_arc(0.0, 1.0, 0.0)
-    UnitQuaternion{Float64}(0.7071067811865476, 0.7071067811865475, -0.0, 0.0)
+# Examples
+```julia-repl
+julia> q = shortest_arc(0.0, 1.0, 0.0)
+UnitQuaternion{Float64}(0.7071067811865476, 0.7071067811865475, -0.0, 0.0)
 
-    julia> backproject(q, 0.1, -0.2, 0.3, -0.4, 0.5, 10.0)
-    0.15197718857623893
-    ```
+julia> backproject(q, 0.1, -0.2, 0.3, -0.4, 0.5, 10.0)
+0.15197718857623893
+```
 """
 @inline function backproject(q::UnitQuaternion, x1::Float64, x2::Float64, z1::Float64, z2::Float64, z3::Float64, γ::Float64)
     ω, x, y, z_q = q.ω, q.x, q.y, q.z
@@ -188,23 +188,23 @@ Analytically computes the inner product between two tomographic feature maps.
 where ``\\mathbf{q} = \\mathbf{q}_{1} \\mathbf{q}_{2}^{-1}`` is the relative rotation between the two kernels.
 Automatically branches between the collinear and non-collinear integrations.
 
-    # Arguments
-    - `q1::UnitQuaternion`: Rotation of the first kernel
-    - `x1_1::Float64`: First coordinate of the first kernel center in the plane
-    - `x1_2::Float64`: Second coordinate of the first kernel center in the plane
-    - `q2::UnitQuaternion`: Rotation of the second kernel
-    - `x2_1::Float64`: First coordinate of the second kernel center in the plane
-    - `x2_2::Float64`: Second coordinate of the second kernel center in the plane
-    - `γ::Float64`: Bandwidth parameter for Gaussian kernel
+# Arguments
+- `q1::UnitQuaternion`: Rotation of the first kernel
+- `x1_1::Float64`: First coordinate of the first kernel center in the plane
+- `x1_2::Float64`: Second coordinate of the first kernel center in the plane
+- `q2::UnitQuaternion`: Rotation of the second kernel
+- `x2_1::Float64`: First coordinate of the second kernel center in the plane
+- `x2_2::Float64`: Second coordinate of the second kernel center in the plane
+- `γ::Float64`: Bandwidth parameter for Gaussian kernel
 
-    # Examples
-    ```julia-repl
-    julia> q_id = UnitQuaternion(1.0, 0.0, 0.0, 0.0)
-    UnitQuaternion{Float64}(1.0, 0.0, 0.0, 0.0)
+# Examples
+```julia-repl
+julia> q_id = UnitQuaternion(1.0, 0.0, 0.0, 0.0)
+UnitQuaternion{Float64}(1.0, 0.0, 0.0, 0.0)
 
-    julia> inner_product(q_id, 0.1, 0.2, q_id, 0.1, 0.2, 10.0)
-    0.9926139338138249
-    ```
+julia> inner_product(q_id, 0.1, 0.2, q_id, 0.1, 0.2, 10.0)
+0.9926139338138249
+```
 """
 @inline function inner_product(q1::UnitQuaternion, x1_1::Float64, x1_2::Float64, q2::UnitQuaternion, x2_1::Float64, x2_2::Float64, γ::Float64)
     # 1. Relative rotation q = q1 * q2^{-1}

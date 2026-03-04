@@ -62,7 +62,7 @@ end
     planar_rotation(q::UnitQuaternion)
 
 Extracts the first column of the 2D in-plane rotation matrix, 
-i.e., it returns a Tuple (c, s) representing ``\\begin{bmatrix} c & -s \\ s & c \\end{bmatrix} \\in SO(2)`` that rotates the detector plane around the projection axis.
+i.e., it returns a Tuple (c, s) representing ``\\begin{bmatrix} c & -s \\\\ s & c \\end{bmatrix} \\in SO(2)`` that rotates the detector plane around the projection axis.
 """
 @inline function planar_rotation(q::UnitQuaternion)
     ω, z = q.ω, q.z

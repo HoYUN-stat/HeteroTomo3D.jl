@@ -57,9 +57,9 @@ end
 
 Computes the 3D X-ray transform (projection) for an array of `UnitQuaternion` rotations:
 ```math
-\\mathcal{P}(f)(\\mathbf{R}_{\\mathbf{q}})(\\mathbf{u}) = \\int_{-W(\\mathbf{u})}^{W(\\mathbf{u})} f(\\mathbf{R}_{\\mathbf{q}}^{-1} [\\mathbf{u} : w]) \\, dw
+\\mathcal{P}(f)(\\mathbf{R}_{\\mathbf{q}})(\\mathbf{u}) = \\int_{-W(\\mathbf{u})}^{W(\\mathbf{u})} f(\\mathbf{R}_{\\mathbf{q}}^{-1} [\\mathbf{u} : z]) \\, dz
 ```
-Returns a 3D array of size ``m \times m \times r`` where `r` is the number of projections.
+Returns a 3D array of size ``m \\times m \\times r`` where `r` is the number of projections (`UnitQuaternion`).
 
     # Arguments
     - `volume::Array{Float64, 3}`: The input 3D volume to be projected. Must be a cube of size `m x m x m`.

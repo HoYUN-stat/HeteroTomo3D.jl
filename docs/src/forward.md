@@ -18,3 +18,7 @@ HeteroTomo3D.truncation
 xray_transform
 HeteroTomo3D.trilinear_interp
 ```
+
+
+## Simulation
+Below is a demonstration of the 3D X-ray transform applied to a 100x100x100 random Shepp-Logan phantom across 60 projection regular angles.

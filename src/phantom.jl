@@ -42,7 +42,7 @@ end
 end
 
 """
-    rand_shepp_logan_3d(m::Int; \\lambda=2.0, seed=nothing, trunc=nothing)
+    rand_shepp_logan_3d(m::Int; λ=2.0, seed=nothing, trunc=nothing)
 
 Generates an ``m \\times m \\times m`` random 3D Shepp-Logan phantom inscribed in a unit sphere.
 Executes with zero inner-loop heap allocations via Tuple unrolling and multithreading.

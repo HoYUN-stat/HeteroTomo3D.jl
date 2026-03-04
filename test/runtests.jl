@@ -63,4 +63,35 @@ using LinearAlgebra
         allocs_ip_ncol = @allocated inner_product(q_id, 0.1, 0.2, q_test, 0.1, 0.2, γ)
         @test allocs_ip_ncol == 0
     end
+
+    @testset "Mean Estimation and Reconstruction" begin
+        # Dimensions for a small test suite
+        s, r, n = 5, 3, 2
+        m = 20
+        γ = 10.0
+        λ = 1e-4
+
+        # 1. Initialize Grids with random data
+        X = EvaluationGrid(rand(2, s, r, n), s, r, n)
+        Q = QuaternionGrid([shortest_arc(1.0, 0.0, 0.0) for _ in 1:r, _ in 1:n], r, n)
+
+        y = rand(s * r * n)
+        a = zeros(s * r * n)
+        K = zeros(s * r * n, s * r * n)
+
+        # 2. Test Gram Matrix Assembly
+        build_mean_gram!(K, X, Q, γ)
+        @test issymmetric(K)
+        @test all(diag(K) .>= 0)
+
+        # 3. Test Solver (In-place routes to a)
+        solve_mean!(a, K, y, λ)
+        @test !any(isnan.(a))
+        @test length(a) == s * r * n
+
+        # 4. Test Reconstruction
+        V = reconstruct_mean(a, X, Q, m, γ)
+        @test size(V) == (m, m, m)
+        @test !any(isnan.(V))
+    end
 end

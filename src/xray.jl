@@ -57,7 +57,7 @@ end
 
 Computes the 3D X-ray transform (projection) for an array of `UnitQuaternion` rotations:
 ```math
-\\mathcal{P}(f)(\\mathbf{R}_{\\mathbf{q}})(\\mathbf{u}) = \\int_{-W(\\mathbf{u})}^{W(\\mathbf{u})} f(\\mathbf{R}_{\\mathbf{q}}^{-1} [\\mathbf{u} : z]) \\, dz
+\\mathcal{P}(f)(\\mathbf{R}_{\\mathbf{q}}, \\mathbf{u}) = \\int_{-W(\\mathbf{u})}^{W(\\mathbf{u})} f(\\mathbf{R}_{\\mathbf{q}}^{-1} [\\mathbf{u} : z]) \\, dz
 ```
 Returns a 3D array of size ``m \\times m \\times r`` where `r` is the number of projections (`UnitQuaternion`).
 
@@ -78,7 +78,7 @@ function xray_transform(volume::Array{Float64,3}, quats::AbstractVector{UnitQuat
     # Multithread over the projection angles (outermost parallelization)
     Base.Threads.@threads for proj_idx in 1:r
         # The detector views the volume from the rotated frame.
-        # So we use the inverse quaternion to map detector coordinates back to the static volume.
+        # Use the inverse quaternion to map detector coordinates back to the static volume.
         q_inv = inv(quats[proj_idx])
         ω, x, y, z = q_inv.ω, q_inv.x, q_inv.y, q_inv.z
 

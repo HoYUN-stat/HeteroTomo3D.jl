@@ -9,6 +9,8 @@ This section covers the estimation of the 3D mean function using the RKHS repres
 ```@docs
 EvaluationGrid
 QuaternionGrid
+BlockDiag
+LazyKhatri
 ```
 
 ## Representer Theorem Solver

@@ -22,7 +22,7 @@ Compute the antiderivative ``\\Phi(z)`` of ``f(z) = \\sqrt{\\pi} \\operatorname{
 ```
 
     # Examples
-    ```
+    ```julia-repl
     julia> antid_erf(2.0)
     3.5466412019384204
     ```
@@ -49,7 +49,7 @@ Output the CDF of the bivariate standard normal distribution with correlation co
     - `ρ::Float64`: Correlation coefficient in [-1, 1]
 
     # Examples
-    ```
+    ```julia-repl
     julia> @btime 10^5 * bvncdf(-2.0, -2.0 , 0.0)
     34.323 ns (0 allocations: 0 bytes)
     51.75685036595643
@@ -134,7 +134,7 @@ Evaluates the point of the tomographic feature map analytically, i.e., computes
     - `γ::Float64`: Bandwidth parameter for Gaussian kernel
 
     # Examples
-    ```
+    ```julia-repl
     julia> q = shortest_arc(0.0, 1.0, 0.0)
     UnitQuaternion{Float64}(0.7071067811865476, 0.7071067811865475, -0.0, 0.0)
 
@@ -198,7 +198,7 @@ Automatically branches between the collinear and non-collinear integrations.
     - `γ::Float64`: Bandwidth parameter for Gaussian kernel
 
     # Examples
-    ```
+    ```julia-repl
     julia> q_id = UnitQuaternion(1.0, 0.0, 0.0, 0.0)
     UnitQuaternion{Float64}(1.0, 0.0, 0.0, 0.0)
 

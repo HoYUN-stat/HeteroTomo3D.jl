@@ -12,7 +12,7 @@
     - `n::Int64`: Number of 3D functions.
 
     # Examples
-    ```
+    ```julia-repl
     julia> s, r, n = 20, 5, 100;
         block = rand(2, s, r, n);
         eval_grid = EvaluationGrid(block, s, r, n);
@@ -110,7 +110,7 @@ Base.size(B::BlockDiag, i::Int) = size(B)[i]
     - `n::Int64`: Number of 3D functions.
 
     # Examples
-    ```
+    ```julia-repl
     julia> s, r, n = 2, 4, 5;
         K = rand(s * r * n, s * r * n);
         khatK = LazyKhatri(K, s, r, n);

@@ -4,7 +4,7 @@
 Constructs the `(s * r * n) x (s * r * n)` Gram matrix `K` for the mean representer theorem.
 Iterates over functions (i), quaternions (j), and evaluation points (k), i.e.,
 ```math
-\\mahtbf{K}[k_{1} + (j_{1} - 1) s + (i_{1} - 1) s r, k_{2} + (j_{2} - 1) s + (i_{2} - 1) s r] = \\langle \\varphi(\\mathbf{R}_{\\mathbf{q}_{i_{1} j_{1}}} \\mathbf{x}_{i_{1} j_{1} k_{1}}), \\varphi(\\mathbf{R}_{\\mathbf{q}_{i_{2} j_{2}}} \\mathbf{x}_{i_{2} j_{2} k_{2}}) \\rangle_{\\mathbb{H}}
+\\mathbf{K}[k_{1} + (j_{1} - 1) s + (i_{1} - 1) s r, k_{2} + (j_{2} - 1) s + (i_{2} - 1) s r] = \\langle \\varphi(\\mathbf{R}_{\\mathbf{q}_{i_{1} j_{1}}} \\mathbf{x}_{i_{1} j_{1} k_{1}}), \\varphi(\\mathbf{R}_{\\mathbf{q}_{i_{2} j_{2}}} \\mathbf{x}_{i_{2} j_{2} k_{2}}) \\rangle_{\\mathbb{H}}
 ```
 """
 function build_mean_gram!(K::Matrix{Float64}, X::EvaluationGrid{Float64}, Q::QuaternionGrid{Float64}, γ::Float64)

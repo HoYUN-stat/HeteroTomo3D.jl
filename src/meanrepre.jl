@@ -72,10 +72,11 @@ function solve_mean!(a::Vector{Float64}, K::Matrix{Float64}, y::Vector{Float64},
     end
 
     # Overwrite the copied matrix with its Cholesky factors
-    F = cholesky!(Symmetric(K_reg))
+    # F = cholesky!(Symmetric(K_reg))
 
     # In-place Linear Solve: Overwrites data vector `y` with coefficient vector `c`
-    ldiv!(a, F, y)
+    # ldiv!(a, F, y)
+    ldiv!(a, K_reg, y)
 
     return a
 end

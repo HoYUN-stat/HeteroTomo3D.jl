@@ -11,7 +11,11 @@ UnitQuaternion
 Base.conj(::UnitQuaternion)
 Base.inv(::UnitQuaternion)
 Base.:*(::UnitQuaternion, ::UnitQuaternion)
+Base.:abs(::UnitQuaternion)
+Random.rand(::Random.AbstractRNG, ::Random.SamplerType{UnitQuaternion})
+rotate
 projection_axis
-planar_rotation
 shortest_arc
+planar_rotation
 ```
+

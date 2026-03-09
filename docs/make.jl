@@ -14,10 +14,10 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
-        "Quaternions" => "quaternions.md",
-        "Tomographic Kernels" => "tomokernel.md",
-        "Forward Operations" => "forward.md",
-        "Mean Estimation" => "meanestimation.md"
+        "Quaternions" => "quaternions.md"
+        # "Tomographic Kernels" => "tomokernel.md",
+        # "Forward Operations" => "forward.md",
+        # "Mean Estimation" => "meanestimation.md"
     ],
 )
 

@@ -3,35 +3,11 @@
 
 Maps discrete voxel integer coordinates natively back to the continuous unit ball `[-1, 1]`.
 """
-function grid_to_real(x::NTuple{2,I}, m::Int; T::Type{T}=Float64) where {I<:Integer,T<:Real}
+function grid_to_real(x::NTuple{2,I}, m::Int, ::Type{T}=Float64) where {I<:Integer,T<:AbstractFloat}
     c = T(m + 1) / 2
     R = T(m - 1) / 2
     return ((T(x[1]) - c) / R, (T(x[2]) - c) / R)
 end
-
-s = 2
-r = 2
-n = 3
-m = 50
-
-x = (25, 25)
-grid_to_real(x, m)
-
-# Create the configuration vectors: [4, 4, 4] for rows and columns
-block_sizes = repeat([s * r], n)
-
-# Pre-allocate the BlockMatrix (uninitialized to save time)
-K = BlockMatrix{Float64}(undef, block_sizes, block_sizes)
-X = rand_evaluation_grid(s, r, n, m);
-Q = rand_quaternion_grid(r, n);
-
-X.blocks
-Q.blocks
-X.s
-size(X)
-size(Q)
-size(K)
-X[1, 1, 1]
 
 """
     build_mean_gram!(K::Matrix{Float64}, X::EvaluationGrid{Float64}, Q::QuaternionGrid{Float64}, γ::Float64)
@@ -57,48 +33,119 @@ function build_gram_matrix!(
     n = X.n
     m = X.m
 
-    # Multithread over the outermost function index
+    # Multithread over the independent column blocks i2
     Threads.@threads for i2 in 1:n
-        base_J_i2 = (i2 - 1) * s * r
-        @inbounds for j2 in 1:r
-            base_J = (j2 - 1) * s + base_J_i2
-            q2 = Q[j2, i2]
-            for k2 in 1:s
-                J = k2 + base_J
-                x2 = X[k2, j2, i2]
+        # Only compute the upper block-triangle
+        for i1 in 1:i2
+            @inbounds K_block = view(K, Block(i1, i2))
 
-                for i1 in 1:n
-                    base_I_i1 = (i1 - 1) * s * r
-                    for j1 in 1:r
-                        base_I = (j1 - 1) * s + base_I_i1
-                        q1 = Q.block[j1, i1]
-                        @simd for k1 in 1:s
-                            I = k1 + base_I
+            for j2 in 1:r
+                q2 = Q[j2, i2]
 
-                            # Compute only the upper triangle
-                            if I <= J
-                                x1_1 = X.block[1, k1, j1, i1]
-                                x1_2 = X.block[2, k1, j1, i1]
+                # If diagonal block, j1 goes up to j2. Otherwise, j1 goes up to r.
+                j1_end = (i1 == i2) ? j2 : r
 
-                                val = inner_product(q1, x1_1, x1_2, q2, x2_1, x2_2, γ)
+                for j1 in 1:j1_end
+                    q1 = Q[j1, i1]
+                    q_rel = q2 * inv(q1)
 
-                                K[I, J] = val
+                    is_same_view = (i1 == i2) && (j1 == j2)
+
+                    if is_same_view
+                        # Diagonal sub-block: Compute only the upper triangle of k1, k2
+                        for k2 in 1:s
+                            x2_int = X[k2, j2, i2]
+                            x2_real = grid_to_real(x2_int, m, T)
+                            J_local = (j2 - 1) * s + k2
+
+                            @simd for k1 in 1:k2
+                                x1_int = X[k1, j1, i1]
+                                x1_real = grid_to_real(x1_int, m, T)
+                                I_local = (j1 - 1) * s + k1
+
+                                val = collinear_inner_product(q_rel, x2_real, x1_real, γ)
+                                K_block[I_local, J_local] = val
+                                if k1 != k2
+                                    K_block[J_local, I_local] = val # Mirror across diagonal
+                                end
+                            end
+                        end
+                    else
+                        # Off-diagonal sub-block: Compute the full s x s grid
+                        for k2 in 1:s
+                            x2_int = X[k2, j2, i2]
+                            x2_real = grid_to_real(x2_int, m, T)
+                            J_local = (j2 - 1) * s + k2
+
+                            @simd for k1 in 1:s
+                                x1_int = X[k1, j1, i1]
+                                x1_real = grid_to_real(x1_int, m, T)
+                                I_local = (j1 - 1) * s + k1
+
+                                val = inner_product(q_rel, x2_real, x1_real, γ)
+                                K_block[I_local, J_local] = val
+
+                                # Mirror off-diagonal sub-blocks inside the diagonal block
+                                if i1 == i2
+                                    K_block[J_local, I_local] = val
+                                end
                             end
                         end
                     end
                 end
             end
-        end
-    end
 
-    @inbounds for J in 1:N
-        @simd for I in 1:(J-1)
-            K[J, I] = K[I, J] # Fill the lower triangle by symmetry
+            # If off-diagonal block, mirror the fully populated block to the lower triangle
+            if i1 != i2
+                @inbounds K_sym_block = view(K, Block(i2, i1))
+                rs = r * s
+                for c in 1:rs
+                    @simd for row in 1:rs
+                        K_sym_block[c, row] = K_block[row, c]
+                    end
+                end
+            end
+
         end
     end
 
     return K
 end
+
+n = 2
+r = 3
+s = 2
+m = 50
+γ = 5.0
+X = rand_evaluation_grid(s, r, n, m)
+Q = rand_quaternion_grid(r, n)
+
+block_sizes = repeat([s * r], n)
+K = BlockMatrix{Float64}(undef, block_sizes, block_sizes)
+build_gram_matrix!(K, X, Q, γ)
+
+issymmetric(K)
+isposdef(K)
+
+#Sanity check
+i1, i2 = rand(1:n, 2)
+j1, j2 = rand(1:r, 2)
+k1, k2 = rand(1:s, 2)
+
+x1 = grid_to_real(X[k1, j1, i1], m)
+x2 = grid_to_real(X[k2, j2, i2], m)
+q1 = Q[j1, i1]
+q2 = Q[j2, i2]
+q_rel = q2 * inv(q1)
+
+val = (i1 == i2 && j1 == j2) ? collinear_inner_product(q_rel, x2, x1, γ) : noncollinear_inner_product(q_rel, x2, x1, γ)
+
+isapprox(val, K.blocks[i1, i2][(j1-1)*s+k1, (j2-1)*s+k2], atol=1e-5)
+
+
+t = randn(1000)
+erf.(t) == -erf.(-t)
+antid_erf.(t) == antid_erf.(-t)
 
 """
     solve_mean!(a::Vector{Float64}, K::Matrix{Float64}, y::Vector{Float64}, λ::Float64)

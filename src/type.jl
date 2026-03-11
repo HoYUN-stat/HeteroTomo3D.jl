@@ -40,7 +40,7 @@ Base.setindex!(X::EvaluationGrid, v, i::Int) = (X.blocks[i] = v)
 Base.setindex!(X::EvaluationGrid, v, i::Int, j::Int, k::Int) = (X.blocks[i, j, k] = v)
 
 function Base.show(io::IO, mime::MIME"text/plain", X::EvaluationGrid)
-    println(io, "EvaluationGrid{$(eltype(X))} with $(X.s) points, $(X.r) views, $(X.n) functions (m=$(X.m)):")
+    println(io, "EvaluationGrid{$(eltype(X))} with $(X.s) points, $(X.r) views, $(X.n) functions (Resolution=$(X.m)):")
     show(io, mime, X.blocks)
 end
 

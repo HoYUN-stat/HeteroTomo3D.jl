@@ -97,6 +97,11 @@ Tsay, Wen-Jen, and Peng-Hsuan Ke, A simple approximation for the bivariate norma
 function bvncdf(p::Float64, q::Float64, ρ::Float64)::Float64
     @assert -1 < ρ < 1
 
+    # Enforce symmetry: Φ2(p, q, ρ) == Φ2(q, p, ρ)
+    if p > q
+        p, q = q, p
+    end
+
     sqrt1mρ2 = sqrt(1 - ρ^2)  # Precompute sqrt(1 - ρ^2)
     a = -ρ / sqrt1mρ2
     b = p / sqrt1mρ2
@@ -150,4 +155,3 @@ function bvncdf(p::Float64, q::Float64, ρ::Float64)::Float64
 
     return cdf
 end
-

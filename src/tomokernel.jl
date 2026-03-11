@@ -45,7 +45,7 @@ end
 Evaluates the inner product between two tomographic feature maps when the viewing directions are strictly parallel or anti-parallel.
 
 # Arguments
-- `q::UnitQuaternion{T}`: Relative rotation between the two kernels
+- `q::UnitQuaternion{T}`: Relative rotation between the two kernels, i.e., `q2 * inv(q1)`
 - `x1::NTuple{2, T}`: Coordinates of the first kernel center in the plane
 - `x2::NTuple{2, T}`: Coordinates of the second kernel center in the plane
 - `γ::T`: Bandwidth parameter for Gaussian kernel
@@ -54,31 +54,27 @@ Evaluates the inner product between two tomographic feature maps when the viewin
 ```julia-repl
 julia> q_parallel = UnitQuaternion(sqrt(2) / 2, 0.0, 0.0, sqrt(2) / 2);
 
-julia> q_antiparallel = UnitQuaternion(0.0, sqrt(2) / 2, sqrt(2) / 2, 0.0);
-
-julia> x1 = (0.1, -0.2);
-
-julia> x2 = (0.3, -0.4);
+julia> x1 = (0.1, -0.2); x2 = (0.3, -0.4);
 
 julia> γ = 5.0;
 
-julia> collinear_inner_product(q_parallel, x1, x2, γ)
-0.339948592300871
+julia> val1 = collinear_inner_product(q_parallel, x1, x2, γ)
+0.33994859230087116
 
-julia> collinear_inner_product(q_antiparallel, x1, x2, γ)
-0.10239054834872334
+julia> val2 = collinear_inner_product(inv(q_parallel), x2, x1, γ)
+0.33994859230087116
 
-julia> q = shortest_arc(0.0, 1.0, 0.0);
-
-julia> collinear_inner_product(q, x1, x2, γ)
-ERROR: AssertionError: Relative rotation must be parallel or anti-parallel.
+julia> isapprox(val1, val2, atol=1e-10) # Symmetry check
+true
 ```
 
 See also [`noncollinear_inner_product`](@ref).
 """
 function collinear_inner_product(q::UnitQuaternion{T}, x1::NTuple{2,T}, x2::NTuple{2,T}, γ::T) where {T<:Real}
-    w1_sq = one(T) - (x1[1]^2 + x1[2]^2)
-    w2_sq = one(T) - (x2[1]^2 + x2[2]^2)
+    sq1 = x1[1]^2 + x1[2]^2
+    sq2 = x2[1]^2 + x2[2]^2
+    w1_sq = one(T) - sq1
+    w2_sq = one(T) - sq2
 
     # Grid-safe boundary handling
     if w1_sq <= zero(T) || w2_sq <= zero(T)
@@ -91,28 +87,19 @@ function collinear_inner_product(q::UnitQuaternion{T}, x1::NTuple{2,T}, x2::NTup
     ω, x, y, z = q.ω, q.x, q.y, q.z
     ρ = one(T) - 2 * (x^2 + y^2)
 
-    # if ρ > 0 # Parallel case
-    #     c = ω^2 - z^2
-    #     s = 2 * ω * z
-    #     # Inverse of a 2D rotation matrix is its transpose
-    #     x2_rot1 = c * x2[1] + s * x2[2]
-    #     x2_rot2 = -s * x2[1] + c * x2[2]
-    # else # Anti-parallel case
-    #     c = x^2 - y^2
-    #     s = 2 * x * y
-    #     # The symmetric 2D reflection matrix is its own inverse
-    #     x2_rot1 = c * x2[1] + s * x2[2]
-    #     x2_rot2 = s * x2[1] - c * x2[2]
-    # end
-
     # Ternary Operation
     c = ρ > 0 ? ω^2 - z^2 : x^2 - y^2
     s = ρ > 0 ? 2 * ω * z : 2 * x * y
-    x2_rot1 = c * x2[1] + s * x2[2]
-    x2_rot2 = ρ > 0 ? -s * x2[1] + c * x2[2] : s * x2[1] - c * x2[2]
 
     # Squared distance of the orthogonal components
-    dist2 = (x1[1] - x2_rot1)^2 + (x1[2] - x2_rot2)^2
+    if ρ > 0 # Parallel
+        # dot = x1' * R(q^{-1}) * x2, where R is rotation
+        dot_prod = c * (x1[1] * x2[1] + x1[2] * x2[2]) + s * (x1[1] * x2[2] - x1[2] * x2[1])
+    else # Anti-parallel
+        # dot = x1' * S_refl * x2, where S is reflection
+        dot_prod = c * (x1[1] * x2[1] - x1[2] * x2[2]) + s * (x1[1] * x2[2] + x1[2] * x2[1])
+    end
+    dist2 = sq1 + sq2 - 2 * dot_prod
     sqrt_γ = sqrt(γ)
 
     term1 = antid_erf(sqrt_γ * (w1 + w2))
@@ -135,28 +122,27 @@ Evaluates the inner product between two tomographic feature maps when the viewin
 
 # Examples
 ```julia-repl
-julia> q_parallel = UnitQuaternion(sqrt(2) / 2, 0.0, 0.0, sqrt(2) / 2);
+julia> q = rand(UnitQuaternion);
 
-julia> x1 = (0.1, -0.2);
+julia> x1 = (0.1, -0.2); x2 = (0.3, -0.4); γ = 5.0;
 
-julia> x2 = (0.3, -0.4);
+julia> val1 = noncollinear_inner_product(q, x1, x2, γ)
+0.1864041860183954
 
-julia> γ = 5.0;
+julia> val2 = noncollinear_inner_product(inv(q), x2, x1, γ)
+0.1864041860183954
 
-julia> noncollinear_inner_product(q_parallel, x1, x2, γ)
-ERROR: AssertionError: Correlation coefficient must satisfy |ρ| < 1 for non-collinear case.
-
-julia> q = shortest_arc(0.0, 1.0, 0.0);
-
-julia> noncollinear_inner_product(q, x1, x2, γ)
-0.48743950572926514
+julia> isapprox(val1, val2, atol=1e-10) # Symmetry check
+true
 ```
 
 See also [`collinear_inner_product`](@ref).
 """
 function noncollinear_inner_product(q::UnitQuaternion{T}, x1::NTuple{2,T}, x2::NTuple{2,T}, γ::T) where {T<:Real}
-    w1_sq = one(T) - (x1[1]^2 + x1[2]^2)
-    w2_sq = one(T) - (x2[1]^2 + x2[2]^2)
+    sq1 = x1[1]^2 + x1[2]^2
+    sq2 = x2[1]^2 + x2[2]^2
+    w1_sq = one(T) - sq1
+    w2_sq = one(T) - sq2
 
     if w1_sq <= zero(T) || w2_sq <= zero(T)
         return zero(T)
@@ -165,26 +151,17 @@ function noncollinear_inner_product(q::UnitQuaternion{T}, x1::NTuple{2,T}, x2::N
     w1 = sqrt(w1_sq)
     w2 = sqrt(w2_sq)
 
-    # 1. Evaluate the displacement d = [x1; 0] - R_q^{-1} [x2; 0]
-    p2 = rotate(inv(q), (x2[1], x2[2], zero(T)))
-    d1 = x1[1] - p2[1]
-    d2 = x1[2] - p2[2]
-    d3 = -p2[3]
-
-    # 2. Extract projection axis and correlation
-    r_q = projection_axis(q)
-    ρ = r_q[3] # Mathematically equal to e_3^T r_q
-
-    # 3. Compute dot products
-    b1 = d3
-    b2 = r_q[1] * x1[1] + r_q[2] * x1[2]
+    ω, x, y, z = q.ω, q.x, q.y, q.z
+    ρ = one(T) - 2 * (x^2 + y^2)
+    b1 = 2 * (x * z + ω * y) * x2[1] + 2 * (y * z - ω * x) * x2[2]
+    b2 = 2 * (x * z - ω * y) * x1[1] + 2 * (y * z + ω * x) * x1[2]
 
     # 4. Compute BVN parameters
     onemρ2 = one(T) - ρ * ρ
     inv_onemρ2 = one(T) / onemρ2
 
-    μ1 = (ρ * b2 - b1) * inv_onemρ2
-    μ2 = (b2 - ρ * b1) * inv_onemρ2
+    μ1 = (b1 + ρ * b2) * inv_onemρ2
+    μ2 = (b2 + ρ * b1) * inv_onemρ2
 
     scale = sqrt(2 * γ * onemρ2)
     u1_plus = scale * (w1 - μ1)
@@ -202,12 +179,28 @@ function noncollinear_inner_product(q::UnitQuaternion{T}, x1::NTuple{2,T}, x2::N
     prob_mass = bvn_pp - bvn_mp - bvn_pm + bvn_mm
 
     # 6. Apply constant multipliers
-    d_norm2 = d1 * d1 + d2 * d2 + d3 * d3
-    shift_penalty = (b1 * b1 - 2 * ρ * b1 * b2 + b2 * b2) * inv_onemρ2
+    M11 = one(T) - 2 * (y^2 + z^2)
+    M12 = 2 * (x * y + ω * z)
+    M21 = 2 * (x * y - ω * z)
+    M22 = one(T) - 2 * (x^2 + z^2)
+
+    d_norm2 = sq1 + sq2 - 2 * (x1[1] * (M11 * x2[1] + M12 * x2[2]) + x1[2] * (M21 * x2[1] + M22 * x2[2]))
+    shift_penalty = b1 * μ1 + b2 * μ2
     multiplier = (T(π) / γ) * sqrt(inv_onemρ2) * exp(-γ * (d_norm2 - shift_penalty))
 
     return multiplier * prob_mass
 end
+
+using Random;
+Random.seed!(42);
+q = rand(UnitQuaternion);
+x1 = (0.1, -0.2);
+x2 = (0.3, -0.4);
+γ = 5.0;
+val1 = noncollinear_inner_product(q, x1, x2, γ)
+val2 = noncollinear_inner_product(inv(q), x2, x1, γ)
+isapprox(val1, val2, atol=1e-10) # Symmetry check
+
 
 """
     inner_product(q::UnitQuaternion{T}, x1::NTuple{2, T}, x2::NTuple{2, T}, γ::T) where {T<:Real} -> T
@@ -232,4 +225,3 @@ function inner_product(q::UnitQuaternion{T}, x1::NTuple{2,T}, x2::NTuple{2,T}, �
         return noncollinear_inner_product(q, x1, x2, γ)
     end
 end
-

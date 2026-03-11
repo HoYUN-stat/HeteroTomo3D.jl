@@ -21,7 +21,7 @@ include("cdf.jl")
 
 export UnitQuaternion, projection_axis, planar_rotation, shortest_arc, rotate
 export EvaluationGrid, rand_evaluation_grid, QuaternionGrid, rand_quaternion_grid, BlockDiagonal, zero_block_diag, undef_block_diag, rand_block_diag, block_outer, ⊙, blocksizes
-export unicdf, antid_erf, affine_erf, bvncdf, affine_bvncdf
+export antid_erf, bvncdf
 # export backproject, inner_product
 # export rand_shepp_logan_3d, TruncationType, HyperbolicTangent, ArcTangent, Gudermannian
 # export xray_transform, trilinear_interp

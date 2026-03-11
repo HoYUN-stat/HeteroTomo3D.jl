@@ -1,128 +1,6 @@
-const SQRT2 = sqrt(2.0)
-const SQRT_PI = sqrt(π)
 
 """
-    unicdf(x::Float64) -> Float64
-
-CDF of the standard normal distribution, i.e., 
-```math
-\\Phi(x) = \\mathbb{P}(Z \\le x) = \\frac{1}{2} \\left( 1 + \\operatorname{erf}\\left( \\frac{x}{\\sqrt{2}} \\right) \\right).
-```
-"""
-unicdf(x::Float64) = 0.5 * (1 + erf(x / SQRT2)) #CDF of N(0, 1)
-
-"""
-    unicdf(x::Float64, y::Float64) -> Float64
-
-Accurate version of `unicdf(y) - unicdf(x)`.
-"""
-unicdf(x::Float64, y::Float64) = 0.5 * erf(x / SQRT2, y / SQRT2)
-
-"""
-    antid_erf(z::Float64)::Float64
-
-Compute the antiderivative ``\\Phi(z)`` of ``f(z) = \\sqrt{\\pi} \\operatorname{erf}(z)``, i.e.,
-```math
-\\Phi(z) =  \\int_{0}^{z} f(z) \\, dz + e^{-1} = \\sqrt{\\pi} z \\operatorname{erf}(z) + \\exp(- z^{2}).
-```
-
-# Examples
-```julia-repl
-julia> antid_erf(2.0)
-3.5466412019384204
-```
-"""
-function antid_erf(z::Float64)::Float64
-    return SQRT_PI * z * erf(z) + exp(-z^2)
-end
-
-# Precomputed constants for the bivariate normal CDF approximation
-const c1 = -1.0950081470333
-const c2 = -0.75651138383854
-
-"""
-    bvncdf(p::Float64, q::Float64, ρ::Float64)::Float64
-
-Output the CDF of the bivariate standard normal distribution with correlation coefficient ρ, i.e.,
-```math
-\\Phi_{2}(p, q; \\rho) = \\mathbb{P}(Z_1 \\le p, Z_2 \\le q) \\quad \\text{where} \\quad \\begin{bmatrix} Z_1 \\\\ Z_2 \\end{bmatrix} \\sim \\mathcal{N}\\left(\\mathbf{0}, \\begin{bmatrix} 1 & \\rho \\\\ \\rho & 1 \\end{bmatrix}\\right)
-```
-
-# Arguments
-- `p::Float64`: First input
-- `q::Float64`: Second input
-- `ρ::Float64`: Correlation coefficient in [-1, 1]
-
-# Examples
-```julia-repl
-julia> @btime 10^5 * bvncdf(-2.0, -2.0 , 0.0)
-34.323 ns (0 allocations: 0 bytes)
-51.75685036595643
-```
-
-# Reference
-Tsay, Wen-Jen, and Peng-Hsuan Ke, A simple approximation for the bivariate normal integral (2021)
-"""
-function bvncdf(p::Float64, q::Float64, ρ::Float64)::Float64
-    @assert -1 ≤ ρ ≤ 1
-
-    sqrt1mρ2 = sqrt(1 - ρ^2)  # Precompute sqrt(1 - ρ^2)
-    a = -ρ / sqrt1mρ2
-    b = p / sqrt1mρ2
-
-    if a > 0
-        if a * q + b ≥ 0
-            inv_sqrt1ma2c2 = 1 / sqrt(1 - a^2 * c2)  # Reused often
-            exp_term1 = exp((a^2 * c1^2 - 2 * SQRT2 * b * c1 + 2 * b^2 * c2) / (4 * (1 - a^2 * c2)))
-            exp_term2 = exp((a^2 * c1^2 + 2 * SQRT2 * b * c1 + 2 * b^2 * c2) / (4 * (1 - a^2 * c2)))
-
-            erf1 = erf(q / SQRT2)
-            erf2 = erf(b / (SQRT2 * a))
-            erf3 = erf((SQRT2 * b - a^2 * c1) / (2 * a * sqrt(1 - a^2 * c2)))
-            erf4 = erf((SQRT2 * q - SQRT2 * a^2 * c2 * q - SQRT2 * a * b * c2 - a * c1) / (2 * sqrt(1 - a^2 * c2)))
-            erf5 = erf((a^2 * c1 + SQRT2 * b) / (2 * a * sqrt(1 - a^2 * c2)))
-
-            cdf = 0.5 * (erf1 + erf2) +
-                  0.25 * inv_sqrt1ma2c2 * exp_term1 * (1 - erf3) -
-                  0.25 * inv_sqrt1ma2c2 * exp_term2 * (erf4 + erf5)
-        else
-            inv_sqrt1ma2c2 = 1 / sqrt(1 - a^2 * c2)
-            exp_term = exp((a^2 * c1^2 - 2 * SQRT2 * b * c1 + 2 * b^2 * c2) / (4 * (1 - a^2 * c2)))
-            erf_term = erf((SQRT2 * q - SQRT2 * a^2 * c2 * q - SQRT2 * a * b * c2 + a * c1) / (2 * sqrt(1 - a^2 * c2)))
-
-            cdf = 0.25 * inv_sqrt1ma2c2 * exp_term * (1 + erf_term)
-        end
-    elseif a == 0
-        cdf = unicdf(p) * unicdf(q)
-    else
-        if a * q + b ≥ 0
-            inv_sqrt1ma2c2 = 1 / sqrt(1 - a^2 * c2)
-            exp_term = exp((a^2 * c1^2 + 2 * SQRT2 * b * c1 + 2 * b^2 * c2) / (4 * (1 - a^2 * c2)))
-            erf_term = erf((SQRT2 * q - SQRT2 * a^2 * c2 * q - SQRT2 * a * b * c2 - a * c1) / (2 * sqrt(1 - a^2 * c2)))
-
-            cdf = 0.5 + 0.5 * erf(q / SQRT2) -
-                  0.25 * inv_sqrt1ma2c2 * exp_term * (1 + erf_term)
-        else
-            inv_sqrt1ma2c2 = 1 / sqrt(1 - a^2 * c2)
-            exp_term1 = exp((a^2 * c1^2 + 2 * SQRT2 * b * c1 + 2 * b^2 * c2) / (4 * (1 - a^2 * c2)))
-            exp_term2 = exp((a^2 * c1^2 - 2 * SQRT2 * b * c1 + 2 * b^2 * c2) / (4 * (1 - a^2 * c2)))
-
-            erf1 = erf((SQRT2 * b + a^2 * c1) / (2 * a * sqrt(1 - a^2 * c2)))
-            erf2 = erf((-a^2 * c1 + SQRT2 * b) / (2 * a * sqrt(1 - a^2 * c2)))
-            erf3 = erf((SQRT2 * q - SQRT2 * a^2 * c2 * q - SQRT2 * a * b * c2 + a * c1) / (2 * sqrt(1 - a^2 * c2)))
-
-            cdf = 0.5 - 0.5 * erf(b / (SQRT2 * a)) -
-                  0.25 * inv_sqrt1ma2c2 * exp_term1 * (1 - erf1) +
-                  0.25 * inv_sqrt1ma2c2 * exp_term2 * (erf3 + erf2)
-        end
-    end
-
-    return cdf
-end
-
-
-"""
-    backproject(q::UnitQuaternion, x1::Float64, x2::Float64, z1::Float64, z2::Float64, z3::Float64, γ::Float64)
+    backproject(q::UnitQuaternion{T}, x::NTuple{2, T}, z::NTuple{3, T}, γ::T) where {T<:Real} -> T
 
 Evaluates the point of the tomographic feature map analytically, i.e., computes
 ```math
@@ -130,153 +8,243 @@ Evaluates the point of the tomographic feature map analytically, i.e., computes
 ```
 
 # Arguments
-- `q::UnitQuaternion`: Rotation of the kernel
-- `x1::Float64`: First coordinate of the kernel center in the plane
-- `x2::Float64`: Second coordinate of the kernel center in the plane
-- `z1::Float64`: First coordinate of the evaluation point in 3D space
-- `z2::Float64`: Second coordinate of the evaluation point in 3D space
-- `z3::Float64`: Third coordinate of the evaluation point in 3D space
-- `γ::Float64`: Bandwidth parameter for Gaussian kernel
+- `q::UnitQuaternion{T}`: Rotation of the kernel
+- `x::NTuple{2, T}`: Coordinates of the kernel center in the plane
+- `z::NTuple{3, T}`: Coordinates of the evaluation point in 3D space
+- `γ::T`: Bandwidth parameter for Gaussian kernel
 
 # Examples
 ```julia-repl
 julia> q = shortest_arc(0.0, 1.0, 0.0)
 UnitQuaternion{Float64}(0.7071067811865476, 0.7071067811865475, -0.0, 0.0)
 
-julia> backproject(q, 0.1, -0.2, 0.3, -0.4, 0.5, 10.0)
-0.15197718857623893
+julia> backproject(q, (0.1, -0.2), (0.3, -0.4, 0.5), 10.0)
+0.15197718857623901
 ```
 """
-@inline function backproject(q::UnitQuaternion, x1::Float64, x2::Float64, z1::Float64, z2::Float64, z3::Float64, γ::Float64)
-    ω, x, y, z_q = q.ω, q.x, q.y, q.z
+function backproject(q::UnitQuaternion{T}, x::NTuple{2,T}, z::NTuple{3,T}, γ::T) where {T<:Real}
+    dist2_x = x[1]^2 + x[2]^2
 
-    # 1. Compute projection axis r_q
-    rq_x = 2.0 * (x * z_q - ω * y)
-    rq_y = 2.0 * (y * z_q + ω * x)
-    rq_z = 1.0 - 2.0 * (x * x + y * y)
+    if dist2_x >= one(T)
+        return zero(T)
+    end
 
-    z_dot_rq = z1 * rq_x + z2 * rq_y + z3 * rq_z
+    W_x = sqrt(one(T) - dist2_x)
+    p1, p2, p3 = rotate(q, z)
 
-    # 2. Extract first two rows of R_q applied to z
-    R11 = 1.0 - 2.0 * (y * y + z_q * z_q)
-    R12 = 2.0 * (x * y - ω * z_q)
-    R13 = 2.0 * (x * z_q + ω * y)
+    dist2 = (x[1] - p1)^2 + (x[2] - p2)^2
+    term = affine_erf(W_x, p3, γ)
 
-    R21 = 2.0 * (x * y + ω * z_q)
-    R22 = 1.0 - 2.0 * (x * x + z_q * z_q)
-    R23 = 2.0 * (y * z_q - ω * x)
-
-    # Projected coordinates in the plane of x1, x2
-    pi1 = R11 * z1 + R12 * z2 + R13 * z3
-    pi2 = R21 * z1 + R22 * z2 + R23 * z3
-
-    # 3. Squared distance
-    dist2 = (x1 - pi1)^2 + (x2 - pi2)^2
-
-    # 4. Integration limits (W(x) function)
-    W_x = sqrt(max(0.0, 1.0 - x1 * x1 - x2 * x2))
-
-    sqrt_γ = sqrt(γ)
-    term0 = sqrt_γ * (W_x - z_dot_rq)
-    term1 = sqrt_γ * (-W_x - z_dot_rq)
-
-    return (sqrt(π) * exp(-γ * dist2) / (2.0 * sqrt_γ)) * (erf(term0) - erf(term1))
+    return exp(-γ * dist2) * term
 end
 
-"""
-    inner_product(q::UnitQuaternion, x1_1::Float64, x1_2::Float64, q2::UnitQuaternion, x2_1::Float64, x2_2::Float64, γ::Float64)
 
-Analytically computes the inner product between two tomographic feature maps.
-```math
-\\langle \\varphi_{\\gamma} (\\mathbf{R}_{\\mathbf{q}_{1}}, \\mathbf{x}_{1}), \\varphi_{\\gamma} (\\mathbf{R}_{\\mathbf{q}_{2}}, \\mathbf{x}_{2}) \\rangle_{\\mathcal{H}} =\\int_{-W(\\mathbf{x}_{1})}^{W(\\mathbf{x}_{1})} \\int_{-W(\\mathbf{x}_{2})}^{W(\\mathbf{x}_{2})} \\exp \\left( - \\gamma \\|[\\mathbf{x}_{1}:z_{1}] - \\mathbf{R}_{\\mathbf{q}} [\\mathbf{x}_{2}:z_{2}]\\|^{2} \\right) \\, dz_{2} \\, d z_{1},
-```
-where ``\\mathbf{q} = \\mathbf{q}_{1} \\mathbf{q}_{2}^{-1}`` is the relative rotation between the two kernels.
-Automatically branches between the collinear and non-collinear integrations.
+"""
+    collinear_inner_product(q::UnitQuaternion{T}, x1::NTuple{2, T}, x2::NTuple{2, T}, γ::T) where {T<:Real} -> T
+
+Evaluates the inner product between two tomographic feature maps when the viewing directions are strictly parallel or anti-parallel.
 
 # Arguments
-- `q1::UnitQuaternion`: Rotation of the first kernel
-- `x1_1::Float64`: First coordinate of the first kernel center in the plane
-- `x1_2::Float64`: Second coordinate of the first kernel center in the plane
-- `q2::UnitQuaternion`: Rotation of the second kernel
-- `x2_1::Float64`: First coordinate of the second kernel center in the plane
-- `x2_2::Float64`: Second coordinate of the second kernel center in the plane
-- `γ::Float64`: Bandwidth parameter for Gaussian kernel
+- `q::UnitQuaternion{T}`: Relative rotation between the two kernels
+- `x1::NTuple{2, T}`: Coordinates of the first kernel center in the plane
+- `x2::NTuple{2, T}`: Coordinates of the second kernel center in the plane
+- `γ::T`: Bandwidth parameter for Gaussian kernel
 
 # Examples
 ```julia-repl
-julia> q_id = UnitQuaternion(1.0, 0.0, 0.0, 0.0)
-UnitQuaternion{Float64}(1.0, 0.0, 0.0, 0.0)
+julia> q_parallel = UnitQuaternion(sqrt(2) / 2, 0.0, 0.0, sqrt(2) / 2);
 
-julia> inner_product(q_id, 0.1, 0.2, q_id, 0.1, 0.2, 10.0)
-0.9926139338138249
+julia> q_antiparallel = UnitQuaternion(0.0, sqrt(2) / 2, sqrt(2) / 2, 0.0);
+
+julia> x1 = (0.1, -0.2);
+
+julia> x2 = (0.3, -0.4);
+
+julia> γ = 5.0;
+
+julia> collinear_inner_product(q_parallel, x1, x2, γ)
+0.339948592300871
+
+julia> collinear_inner_product(q_antiparallel, x1, x2, γ)
+0.10239054834872334
+
+julia> q = shortest_arc(0.0, 1.0, 0.0);
+
+julia> collinear_inner_product(q, x1, x2, γ)
+ERROR: AssertionError: Relative rotation must be parallel or anti-parallel.
 ```
+
+See also [`noncollinear_inner_product`](@ref).
 """
-@inline function inner_product(q1::UnitQuaternion, x1_1::Float64, x1_2::Float64, q2::UnitQuaternion, x2_1::Float64, x2_2::Float64, γ::Float64)
-    # 1. Relative rotation q = q1 * q2^{-1}
-    q = q1 * inv(q2)
+function collinear_inner_product(q::UnitQuaternion{T}, x1::NTuple{2,T}, x2::NTuple{2,T}, γ::T) where {T<:Real}
+    w1_sq = one(T) - (x1[1]^2 + x1[2]^2)
+    w2_sq = one(T) - (x2[1]^2 + x2[2]^2)
+
+    # Grid-safe boundary handling
+    if w1_sq <= zero(T) || w2_sq <= zero(T)
+        return zero(T)
+    end
+
+    w1 = sqrt(w1_sq)
+    w2 = sqrt(w2_sq)
+
     ω, x, y, z = q.ω, q.x, q.y, q.z
+    ρ = one(T) - 2 * (x^2 + y^2)
 
-    x2py2 = x * x + y * y
-    ω2pz2 = ω * ω + z * z
-    rq = 1.0 - 2.0 * x2py2
+    # |ρ| should be 1
+    @assert isapprox(ρ, 1.0, atol=1e-14) || isapprox(ρ, -1.0, atol=1e-14) "Relative rotation must be parallel or anti-parallel."
 
-    # Limit variables
-    W1 = sqrt(max(0.0, 1.0 - x1_1 * x1_1 - x1_2 * x1_2))
-    W2 = sqrt(max(0.0, 1.0 - x2_1 * x2_1 - x2_2 * x2_2))
+    if ρ > 0 # Parallel case
+        c = ω^2 - z^2
+        s = 2 * ω * z
+        # Inverse of a 2D rotation matrix is its transpose
+        x2_rot1 = c * x2[1] + s * x2[2]
+        x2_rot2 = -s * x2[1] + c * x2[2]
+    else # Anti-parallel case
+        c = x^2 - y^2
+        s = 2 * x * y
+        # The symmetric 2D reflection matrix is its own inverse
+        x2_rot1 = c * x2[1] + s * x2[2]
+        x2_rot2 = s * x2[1] - c * x2[2]
+    end
 
-    if rq ≈ 1.0
-        # --- COLLINEAR AXES ---
-        inv_n2 = 1.0 / ω2pz2
-        R11 = (ω * ω - z * z) * inv_n2
-        R12 = 2.0 * ω * z * inv_n2
+    # Squared distance of the orthogonal components
+    dist2 = (x1[1] - x2_rot1)^2 + (x1[2] - x2_rot2)^2
 
-        # Apply inverse planar rotation to x2
-        rot_x2_1 = R11 * x2_1 + R12 * x2_2
-        rot_x2_2 = -R12 * x2_1 + R11 * x2_2
+    sqrt_γ = sqrt(γ)
 
-        dist2 = (x1_1 - rot_x2_1)^2 + (x1_2 - rot_x2_2)^2
+    term1 = antid_erf(sqrt_γ * (w1 + w2))
+    term2 = antid_erf(sqrt_γ * (w1 - w2))
 
-        sqrt_γ = sqrt(γ)
+    return (one(T) / γ) * exp(-γ * dist2) * (term1 - term2)
+end
 
-        # antid_erf is identical to Phi(z) up to the -1 constant, which cancels perfectly in this alternating sum.
-        sum_phi = antid_erf(sqrt_γ * (W1 + W2)) -
-                  antid_erf(sqrt_γ * (W1 - W2)) -
-                  antid_erf(sqrt_γ * (-W1 + W2)) +
-                  antid_erf(sqrt_γ * (-W1 - W2))
 
-        return (1.0 / (2.0 * γ)) * exp(-γ * dist2) * sum_phi
+"""
+    noncollinear_inner_product(q::UnitQuaternion{T}, x1::NTuple{2, T}, x2::NTuple{2, T}, γ::T) where {T<:Real} -> T
 
+Evaluates the inner product between two tomographic feature maps when the viewing directions are non-collinear.
+
+# Arguments
+- `q::UnitQuaternion{T}`: Relative rotation between the two kernels
+- `x1::NTuple{2, T}`: Coordinates of the first kernel center in the plane
+- `x2::NTuple{2, T}`: Coordinates of the second kernel center in the plane
+- `γ::T`: Bandwidth parameter for Gaussian kernel
+
+# Examples
+```julia-repl
+julia> q_parallel = UnitQuaternion(sqrt(2) / 2, 0.0, 0.0, sqrt(2) / 2);
+
+julia> x1 = (0.1, -0.2);
+
+julia> x2 = (0.3, -0.4);
+
+julia> γ = 5.0;
+
+julia> noncollinear_inner_product(q_parallel, x1, x2, γ)
+ERROR: AssertionError: Correlation coefficient must satisfy |ρ| < 1 for non-collinear case.
+
+julia> q = shortest_arc(0.0, 1.0, 0.0);
+
+julia> noncollinear_inner_product(q, x1, x2, γ)
+0.48743950572926514
+```
+
+See also [`collinear_inner_product`](@ref).
+"""
+function noncollinear_inner_product(q::UnitQuaternion{T}, x1::NTuple{2,T}, x2::NTuple{2,T}, γ::T) where {T<:Real}
+    w1_sq = one(T) - (x1[1]^2 + x1[2]^2)
+    w2_sq = one(T) - (x2[1]^2 + x2[2]^2)
+
+    if w1_sq <= zero(T) || w2_sq <= zero(T)
+        return zero(T)
+    end
+
+    w1 = sqrt(w1_sq)
+    w2 = sqrt(w2_sq)
+
+    # 1. Evaluate the displacement d = [x1; 0] - R_q^{-1} [x2; 0]
+    p2 = rotate(inv(q), (x2[1], x2[2], zero(T)))
+    d1 = x1[1] - p2[1]
+    d2 = x1[2] - p2[2]
+    d3 = -p2[3]
+
+    # 2. Extract projection axis and correlation
+    r_q = projection_axis(q)
+    ρ = r_q[3] # Mathematically equal to e_3^T r_q
+
+    # 3. Compute dot products
+    b1 = d3
+    b2 = r_q[1] * x1[1] + r_q[2] * x1[2]
+
+    # 4. Compute BVN parameters
+    onemρ2 = one(T) - ρ * ρ
+    @assert onemρ2 > 1e-12 "Correlation coefficient must satisfy |ρ| < 1 for non-collinear case."
+
+    inv_onemρ2 = one(T) / onemρ2
+
+    μ1 = (ρ * b2 - b1) * inv_onemρ2
+    μ2 = (b2 - ρ * b1) * inv_onemρ2
+
+    scale = sqrt(2 * γ * onemρ2)
+    u1_plus = scale * (w1 - μ1)
+    u1_minus = scale * (-w1 - μ1)
+    u2_plus = scale * (w2 - μ2)
+    u2_minus = scale * (-w2 - μ2)
+
+    # 5. Evaluate custom BVN CDF block
+    # Note: Explicit Float64 conversion ensures type stability with your bvncdf implementation
+    bvn_pp = bvncdf(Float64(u1_plus), Float64(u2_plus), Float64(ρ))
+    bvn_mp = bvncdf(Float64(u1_minus), Float64(u2_plus), Float64(ρ))
+    bvn_pm = bvncdf(Float64(u1_plus), Float64(u2_minus), Float64(ρ))
+    bvn_mm = bvncdf(Float64(u1_minus), Float64(u2_minus), Float64(ρ))
+
+    prob_mass = bvn_pp - bvn_mp - bvn_pm + bvn_mm
+
+    # 6. Apply constant multipliers
+    d_norm2 = d1 * d1 + d2 * d2 + d3 * d3
+    shift_penalty = (b1 * b1 - 2 * ρ * b1 * b2 + b2 * b2) * inv_onemρ2
+    multiplier = (T(π) / γ) * sqrt(inv_onemρ2) * exp(-γ * (d_norm2 - shift_penalty))
+
+    return multiplier * prob_mass
+end
+
+"""
+    inner_product(q::UnitQuaternion{T}, x1::NTuple{2, T}, x2::NTuple{2, T}, γ::T) where {T<:Real} -> T
+
+Evaluates the inner product between two tomographic feature maps exactly.
+
+# Arguments
+- `q::UnitQuaternion{T}`: Relative rotation between the two kernels
+- `x1::NTuple{2, T}`: Coordinates of the first kernel center in the plane
+- `x2::NTuple{2, T}`: Coordinates of the second kernel center in the plane
+- `γ::T`: Bandwidth parameter for Gaussian kernel
+
+See also [`collinear_inner_product`](@ref), [`noncollinear_inner_product`](@ref).
+"""
+function inner_product(q::UnitQuaternion{T}, x1::NTuple{2,T}, x2::NTuple{2,T}, γ::T) where {T<:Real}
+    # Extract ρ = 1 - 2*(x^2 + y^2) to safely branch
+    ρ = one(T) - 2 * (q.x^2 + q.y^2)
+
+    if abs(ρ) > one(T) - 1e-12
+        return collinear_inner_product(q, x1, x2, γ)
     else
-        # --- NON-COLLINEAR AXES ---
-        inv_ω2pz2 = 1.0 / ω2pz2
-        inv_w = 0.5 / sqrt(x2py2 * ω2pz2) # Precompute for scaling
-        w_rq = 2.0 * sqrt(x2py2 * ω2pz2)
-
-        # Extract 1D planar components for x2
-        x2_1_mapped = ((ω * ω - z * z) * x2_1 + 2.0 * ω * z * x2_2) * inv_ω2pz2
-        x2_2_mapped = (-2.0 * ω * z * x2_1 + (ω * ω - z * z) * x2_2) * inv_ω2pz2
-
-        # Extract 1D planar components for x1
-        x1_1_mapped = ((y * z + ω * x) * x1_1 + (ω * y - x * z) * x1_2) * inv_w
-        x1_2_mapped = ((x * z - ω * y) * x1_1 + (y * z + ω * x) * x1_2) * inv_w
-
-        μ1 = rq * x1_2_mapped - x2_2_mapped
-        μ2 = x1_2_mapped - rq * x2_2_mapped
-
-        sqrt_2γ = sqrt(2.0 * γ)
-
-        cdf00 = bvncdf(sqrt_2γ * (w_rq * W1 - μ1), sqrt_2γ * (w_rq * W2 - μ2), rq)
-        cdf01 = bvncdf(sqrt_2γ * (w_rq * W1 - μ1), sqrt_2γ * (-w_rq * W2 - μ2), rq)
-        cdf10 = bvncdf(sqrt_2γ * (-w_rq * W1 - μ1), sqrt_2γ * (w_rq * W2 - μ2), rq)
-        cdf11 = bvncdf(sqrt_2γ * (-w_rq * W1 - μ1), sqrt_2γ * (-w_rq * W2 - μ2), rq)
-
-        sum_cdf = cdf00 - cdf01 - cdf10 + cdf11
-
-        return (π * exp(-γ * (x1_1_mapped - x2_1_mapped)^2)) / (γ * w_rq) * sum_cdf
+        return noncollinear_inner_product(q, x1, x2, γ)
     end
 end
 
 
-function tomo_inn_pr(q1::UnitQuaternion{Float64}, x1::NTuple{2,Float64}, q2::UnitQuaternion{Float64}, x2::NTuple{2,Float64}, γ::Float64)
-    return inner_product(q1, x1[1], x1[2], q2, x2[1], x2[2], γ)
-end
+q_parallel = UnitQuaternion(sqrt(2) / 2, 0.0, 0.0, sqrt(2) / 2);
+q_antiparallel = UnitQuaternion(0.0, sqrt(2) / 2, sqrt(2) / 2, 0.0);
+x1 = (0.1, -0.2);
+x2 = (0.3, -0.4);
+γ = 5.0;
+
+noncollinear_inner_product(q_parallel, x1, x2, γ)
+noncollinear_inner_product(q_antiparallel, x1, x2, γ)
+
+q = rand(UnitQuaternion)
+q_id = UnitQuaternion(1.0, 0.0, 0.0, 0.0);
+noncollinear_inner_product(q, x1, x2, γ)
+tomo_inn_pr(q, x1, q_id, x2, γ)
+tomo_inn_pr(q_id, x1, q, x2, γ)

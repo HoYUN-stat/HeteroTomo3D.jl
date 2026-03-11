@@ -11,19 +11,19 @@ CDF of the standard normal distribution, i.e.,
 """
 unicdf(x::Float64) = 0.5 * (1 + erf(x / SQRT2)) #CDF of N(0, 1)
 
-"""
-    unicdf(x::Float64, y::Float64) -> Float64
+# """
+#     unicdf(x::Float64, y::Float64) -> Float64
 
-Accurate version of `unicdf(y) - unicdf(x)`.
-"""
-unicdf(x::Float64, y::Float64) = 0.5 * erf(x / SQRT2, y / SQRT2)
+# Accurate version of `unicdf(y) - unicdf(x)`.
+# """
+# unicdf(x::Float64, y::Float64) = 0.5 * erf(x / SQRT2, y / SQRT2)
 
 """
     antid_erf(z::Float64)::Float64
 
-Compute the antiderivative ``\\Phi(z)`` of ``f(z) = \\sqrt{\\pi} \\operatorname{erf}(z)``, i.e.,
+Compute the antiderivative of the scaled error function, i.e.,
 ```math
-\\Phi(z) =  \\int_{0}^{z} f(z) \\, dz + e^{-1} = \\sqrt{\\pi} z \\operatorname{erf}(z) + \\exp(- z^{2}).
+\\Phi(z) =  \\sqrt{\\pi} \\int_{0}^{z} \\operatorname{erf}(t) \\, dt + 1 = \\sqrt{\\pi} z \\operatorname{erf}(z) + \\exp(- z^{2}).
 ```
 
 # Examples
@@ -95,7 +95,7 @@ julia> @btime 10^5 * bvncdf(-2.0, -2.0 , 0.0)
 Tsay, Wen-Jen, and Peng-Hsuan Ke, A simple approximation for the bivariate normal integral (2021)
 """
 function bvncdf(p::Float64, q::Float64, ρ::Float64)::Float64
-    @assert -1 ≤ ρ ≤ 1
+    @assert -1 < ρ < 1
 
     sqrt1mρ2 = sqrt(1 - ρ^2)  # Precompute sqrt(1 - ρ^2)
     a = -ρ / sqrt1mρ2

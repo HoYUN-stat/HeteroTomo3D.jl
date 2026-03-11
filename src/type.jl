@@ -34,6 +34,15 @@ end
 Base.eltype(X::EvaluationGrid) = eltype(X.blocks)
 Base.size(X::EvaluationGrid) = (X.s, X.r, X.n)
 Base.size(X::EvaluationGrid, i::Int) = size(X)[i]
+Base.getindex(X::EvaluationGrid, i::Int) = X.blocks[i]
+Base.getindex(X::EvaluationGrid, i::Int, j::Int, k::Int) = X.blocks[i, j, k]
+Base.setindex!(X::EvaluationGrid, v, i::Int) = (X.blocks[i] = v)
+Base.setindex!(X::EvaluationGrid, v, i::Int, j::Int, k::Int) = (X.blocks[i, j, k] = v)
+
+function Base.show(io::IO, mime::MIME"text/plain", X::EvaluationGrid)
+    println(io, "EvaluationGrid{$(eltype(X))} with $(X.s) points, $(X.r) views, $(X.n) functions (m=$(X.m)):")
+    show(io, mime, X.blocks)
+end
 
 """
     rand_evaluation_grid(s, r, n, m; seed=nothing)
@@ -121,6 +130,15 @@ end
 
 Base.eltype(Q::QuaternionGrid) = eltype(Q.blocks)
 Base.size(Q::QuaternionGrid) = (Q.r, Q.n)
+Base.getindex(Q::QuaternionGrid, i::Int) = Q.blocks[i]
+Base.getindex(Q::QuaternionGrid, i::Int, j::Int) = Q.blocks[i, j]
+Base.setindex!(Q::QuaternionGrid, v, i::Int) = (Q.blocks[i] = v)
+Base.setindex!(Q::QuaternionGrid, v, i::Int, j::Int) = (Q.blocks[i, j] = v)
+
+function Base.show(io::IO, mime::MIME"text/plain", Q::QuaternionGrid)
+    println(io, "QuaternionGrid{$(eltype(Q))} with $(Q.r) views, $(Q.n) functions:")
+    show(io, mime, Q.blocks)
+end
 
 
 
@@ -541,4 +559,3 @@ function Krylov.kref!(n::Integer, D1::BlockDiagonal{T}, D2::BlockDiagonal{T}, c:
     end
     return D1, D2
 end
-

@@ -91,26 +91,28 @@ function collinear_inner_product(q::UnitQuaternion{T}, x1::NTuple{2,T}, x2::NTup
     ω, x, y, z = q.ω, q.x, q.y, q.z
     ρ = one(T) - 2 * (x^2 + y^2)
 
-    # |ρ| should be 1
-    @assert isapprox(ρ, 1.0, atol=1e-14) || isapprox(ρ, -1.0, atol=1e-14) "Relative rotation must be parallel or anti-parallel."
+    # if ρ > 0 # Parallel case
+    #     c = ω^2 - z^2
+    #     s = 2 * ω * z
+    #     # Inverse of a 2D rotation matrix is its transpose
+    #     x2_rot1 = c * x2[1] + s * x2[2]
+    #     x2_rot2 = -s * x2[1] + c * x2[2]
+    # else # Anti-parallel case
+    #     c = x^2 - y^2
+    #     s = 2 * x * y
+    #     # The symmetric 2D reflection matrix is its own inverse
+    #     x2_rot1 = c * x2[1] + s * x2[2]
+    #     x2_rot2 = s * x2[1] - c * x2[2]
+    # end
 
-    if ρ > 0 # Parallel case
-        c = ω^2 - z^2
-        s = 2 * ω * z
-        # Inverse of a 2D rotation matrix is its transpose
-        x2_rot1 = c * x2[1] + s * x2[2]
-        x2_rot2 = -s * x2[1] + c * x2[2]
-    else # Anti-parallel case
-        c = x^2 - y^2
-        s = 2 * x * y
-        # The symmetric 2D reflection matrix is its own inverse
-        x2_rot1 = c * x2[1] + s * x2[2]
-        x2_rot2 = s * x2[1] - c * x2[2]
-    end
+    # Ternary Operation
+    c = ρ > 0 ? ω^2 - z^2 : x^2 - y^2
+    s = ρ > 0 ? 2 * ω * z : 2 * x * y
+    x2_rot1 = c * x2[1] + s * x2[2]
+    x2_rot2 = ρ > 0 ? -s * x2[1] + c * x2[2] : s * x2[1] - c * x2[2]
 
     # Squared distance of the orthogonal components
     dist2 = (x1[1] - x2_rot1)^2 + (x1[2] - x2_rot2)^2
-
     sqrt_γ = sqrt(γ)
 
     term1 = antid_erf(sqrt_γ * (w1 + w2))
@@ -179,8 +181,6 @@ function noncollinear_inner_product(q::UnitQuaternion{T}, x1::NTuple{2,T}, x2::N
 
     # 4. Compute BVN parameters
     onemρ2 = one(T) - ρ * ρ
-    @assert onemρ2 > 1e-12 "Correlation coefficient must satisfy |ρ| < 1 for non-collinear case."
-
     inv_onemρ2 = one(T) / onemρ2
 
     μ1 = (ρ * b2 - b1) * inv_onemρ2
@@ -233,18 +233,3 @@ function inner_product(q::UnitQuaternion{T}, x1::NTuple{2,T}, x2::NTuple{2,T}, �
     end
 end
 
-
-q_parallel = UnitQuaternion(sqrt(2) / 2, 0.0, 0.0, sqrt(2) / 2);
-q_antiparallel = UnitQuaternion(0.0, sqrt(2) / 2, sqrt(2) / 2, 0.0);
-x1 = (0.1, -0.2);
-x2 = (0.3, -0.4);
-γ = 5.0;
-
-noncollinear_inner_product(q_parallel, x1, x2, γ)
-noncollinear_inner_product(q_antiparallel, x1, x2, γ)
-
-q = rand(UnitQuaternion)
-q_id = UnitQuaternion(1.0, 0.0, 0.0, 0.0);
-noncollinear_inner_product(q, x1, x2, γ)
-tomo_inn_pr(q, x1, q_id, x2, γ)
-tomo_inn_pr(q_id, x1, q, x2, γ)

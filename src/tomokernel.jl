@@ -2,7 +2,7 @@ const SQRT2 = sqrt(2.0)
 const SQRT_PI = sqrt(π)
 
 """
-    unicdf(x::Float64)
+    unicdf(x::Float64) -> Float64
 
 CDF of the standard normal distribution, i.e., 
 ```math
@@ -11,7 +11,12 @@ CDF of the standard normal distribution, i.e.,
 """
 unicdf(x::Float64) = 0.5 * (1 + erf(x / SQRT2)) #CDF of N(0, 1)
 
+"""
+    unicdf(x::Float64, y::Float64) -> Float64
 
+Accurate version of `unicdf(y) - unicdf(x)`.
+"""
+unicdf(x::Float64, y::Float64) = 0.5 * erf(x / SQRT2, y / SQRT2)
 
 """
     antid_erf(z::Float64)::Float64
@@ -269,4 +274,9 @@ julia> inner_product(q_id, 0.1, 0.2, q_id, 0.1, 0.2, 10.0)
 
         return (π * exp(-γ * (x1_1_mapped - x2_1_mapped)^2)) / (γ * w_rq) * sum_cdf
     end
+end
+
+
+function tomo_inn_pr(q1::UnitQuaternion{Float64}, x1::NTuple{2,Float64}, q2::UnitQuaternion{Float64}, x2::NTuple{2,Float64}, γ::Float64)
+    return inner_product(q1, x1[1], x1[2], q2, x2[1], x2[2], γ)
 end

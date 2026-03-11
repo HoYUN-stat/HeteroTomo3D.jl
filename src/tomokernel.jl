@@ -115,7 +115,7 @@ end
 Evaluates the inner product between two tomographic feature maps when the viewing directions are non-collinear.
 
 # Arguments
-- `q::UnitQuaternion{T}`: Relative rotation between the two kernels
+- `q::UnitQuaternion{T}`: Relative rotation between the two kernels, i.e., `q2 * inv(q1)`
 - `x1::NTuple{2, T}`: Coordinates of the first kernel center in the plane
 - `x2::NTuple{2, T}`: Coordinates of the second kernel center in the plane
 - `γ::T`: Bandwidth parameter for Gaussian kernel
@@ -191,15 +191,6 @@ function noncollinear_inner_product(q::UnitQuaternion{T}, x1::NTuple{2,T}, x2::N
     return multiplier * prob_mass
 end
 
-using Random;
-Random.seed!(42);
-q = rand(UnitQuaternion);
-x1 = (0.1, -0.2);
-x2 = (0.3, -0.4);
-γ = 5.0;
-val1 = noncollinear_inner_product(q, x1, x2, γ)
-val2 = noncollinear_inner_product(inv(q), x2, x1, γ)
-isapprox(val1, val2, atol=1e-10) # Symmetry check
 
 
 """
@@ -208,7 +199,7 @@ isapprox(val1, val2, atol=1e-10) # Symmetry check
 Evaluates the inner product between two tomographic feature maps exactly.
 
 # Arguments
-- `q::UnitQuaternion{T}`: Relative rotation between the two kernels
+- `q::UnitQuaternion{T}`: Relative rotation between the two kernels, i.e., `q2 * inv(q1)`.
 - `x1::NTuple{2, T}`: Coordinates of the first kernel center in the plane
 - `x2::NTuple{2, T}`: Coordinates of the second kernel center in the plane
 - `γ::T`: Bandwidth parameter for Gaussian kernel

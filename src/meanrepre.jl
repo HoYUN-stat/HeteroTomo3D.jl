@@ -10,7 +10,7 @@ function grid_to_real(x::NTuple{2,I}, m::Int, ::Type{T}=Float64) where {I<:Integ
 end
 
 """
-    build_mean_gram!(K::Matrix{Float64}, X::EvaluationGrid{Float64}, Q::QuaternionGrid{Float64}, γ::Float64)
+    build_gram_matrix!(K::BlockMatrix{T}, X::EvaluationGrid, Q::QuaternionGrid{T}, γ::T) where {T<:Real}
 
 Constructs the `(s * r * n) x (s * r * n)` Gram matrix `K` for the mean representer theorem.
 Iterates over functions (i), quaternions (j), and evaluation points (k), adhering to the column-major indexing `k + (j - 1) s + (i - 1) s r`.
@@ -63,7 +63,7 @@ function build_gram_matrix!(
                                 x1_real = grid_to_real(x1_int, m, T)
                                 I_local = (j1 - 1) * s + k1
 
-                                val = collinear_inner_product(q_rel, x2_real, x1_real, γ)
+                                val = collinear_inner_product(q_rel, x1_real, x2_real, γ)
                                 K_block[I_local, J_local] = val
                                 if k1 != k2
                                     K_block[J_local, I_local] = val # Mirror across diagonal
@@ -82,7 +82,7 @@ function build_gram_matrix!(
                                 x1_real = grid_to_real(x1_int, m, T)
                                 I_local = (j1 - 1) * s + k1
 
-                                val = inner_product(q_rel, x2_real, x1_real, γ)
+                                val = inner_product(q_rel, x1_real, x2_real, γ)
                                 K_block[I_local, J_local] = val
 
                                 # Mirror off-diagonal sub-blocks inside the diagonal block
@@ -112,47 +112,30 @@ function build_gram_matrix!(
     return K
 end
 
-n = 2
-r = 3
-s = 2
+n = 5
+r = 5
+s = 5
 m = 50
 γ = 5.0
-X = rand_evaluation_grid(s, r, n, m)
-Q = rand_quaternion_grid(r, n)
+λ = 1e-3
+@time X = rand_evaluation_grid(s, r, n, m);
+@time Q = rand_quaternion_grid(r, n);
 
-block_sizes = repeat([s * r], n)
-K = BlockMatrix{Float64}(undef, block_sizes, block_sizes)
-build_gram_matrix!(K, X, Q, γ)
+X_real = grid_to_real.(X.blocks, m)
 
-issymmetric(K)
-isposdef(K)
+@time block_sizes = repeat([s * r], n);
+@time K = BlockMatrix{Float64}(undef, block_sizes, block_sizes);
+@time build_gram_matrix!(K, X, Q, γ);
+@time issymmetric(K)
+eigvals(K)
 
-#Sanity check
-i1, i2 = rand(1:n, 2)
-j1, j2 = rand(1:r, 2)
-k1, k2 = rand(1:s, 2)
-
-x1 = grid_to_real(X[k1, j1, i1], m)
-x2 = grid_to_real(X[k2, j2, i2], m)
-q1 = Q[j1, i1]
-q2 = Q[j2, i2]
-q_rel = q2 * inv(q1)
-
-val = (i1 == i2 && j1 == j2) ? collinear_inner_product(q_rel, x2, x1, γ) : noncollinear_inner_product(q_rel, x2, x1, γ)
-
-isapprox(val, K.blocks[i1, i2][(j1-1)*s+k1, (j2-1)*s+k2], atol=1e-5)
-
-
-t = randn(1000)
-erf.(t) == -erf.(-t)
-antid_erf.(t) == antid_erf.(-t)
 
 """
     solve_mean!(a::Vector{Float64}, K::Matrix{Float64}, y::Vector{Float64}, λ::Float64)
 
 Solves the regularized system `(K + λI) a = y` for the mean representer theorem.
 """
-function solve_mean!(a::Vector{Float64}, K::Matrix{Float64}, y::Vector{Float64}, λ::Float64)
+function solve_mean!(a::Vector{Float64}, K::BlockMatrix{T}, y::BlockVector{T}, λ::T) where {T<:Real}
     N = size(K, 1)
 
     # Allocate one copy so K is not destroyed by the factorization
@@ -164,11 +147,10 @@ function solve_mean!(a::Vector{Float64}, K::Matrix{Float64}, y::Vector{Float64},
     end
 
     # Overwrite the copied matrix with its Cholesky factors
-    # F = cholesky!(Symmetric(K_reg))
+    F = cholesky!(Symmetric(K_reg))
 
     # In-place Linear Solve: Overwrites data vector `y` with coefficient vector `c`
-    # ldiv!(a, F, y)
-    ldiv!(a, K_reg, y)
+    ldiv!(a, F, y)
 
     return a
 end

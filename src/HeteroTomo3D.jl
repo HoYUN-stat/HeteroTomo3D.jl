@@ -12,12 +12,13 @@ include("type.jl")
 include("cdf.jl")
 include("tomokernel.jl")
 include("blocktensor.jl")
+include("blockfpca.jl")
 # include("meanrepre.jl")
 
 # include("meanrecons.jl")
 
 # include("covrepre.jl")
-# include("blockfpca.jl")
+
 # include("phantom.jl")
 # include("xray.jl")
 
@@ -26,7 +27,7 @@ export EvaluationGrid, rand_evaluation_grid, QuaternionGrid, rand_quaternion_gri
 export antid_erf, affine_erf, bvncdf
 export backproject, collinear_inner_product, noncollinear_inner_product, inner_product, grid_to_real, build_gram_matrix!
 export AbstractBlockTensor, BlockOuter, AdjointBlockOuter, CovFwdTensor, AdjointCovFwdTensor
-
+export conj_lanczos, fpca
 
 # export rand_shepp_logan_3d, TruncationType, HyperbolicTangent, ArcTangent, Gudermannian
 # export xray_transform, trilinear_interp

@@ -252,7 +252,7 @@ function Base.show(io::IO, mime::MIME"text/latex", L::CovFwdTensor)
 end
 
 function Base.show(io::IO, mime::MIME"text/latex", L::AdjointCovFwdTensor)
-    print(io, L"Adjoint Covariance Forward Tensor: L = O (K ⊙ K) O' (Redundant due to symmetry)")
+    print(io, "Adjoint Covariance Forward Tensor: L = O (K ⊙ K) O' (Redundant due to symmetry)")
     print(io, "K: ")
     show(io, mime, L.K)
 end

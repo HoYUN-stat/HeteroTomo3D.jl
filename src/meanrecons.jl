@@ -83,3 +83,41 @@ function reconstruct_mean(a::Vector{Float64}, X::EvaluationGrid{Float64}, Q::Qua
 
     return V
 end
+
+
+
+
+
+n = 10
+r = 5
+s = 5
+m = 50
+γ = 5.0
+λ = 1e-2
+@time X = rand_evaluation_grid(s, r, n, m)
+@time Q = rand_quaternion_grid(r, n)
+
+X_real = grid_to_real.(X.blocks, m)
+
+@time block_sizes = repeat([s * r], n);
+@time K = BlockMatrix{Float64}(undef, block_sizes, block_sizes)
+@time build_gram_matrix!(K, X, Q, γ);
+@time issymmetric(K)
+eigvals(K)[1]
+
+A = rand_block_diag(block_sizes)
+
+k = 5
+mypca = fpca(k, A, K; itmax=50)
+Λ = mypca[1]
+V = mypca[2]
+
+# Similar to Idenity
+V' * K * V ≈ I(k)
+B = K * V 
+A * B
+≈ V * Diagonal(Λ)
+
+# a = BlockVector{Float64}(undef, block_sizes)
+# y = BlockVector{Float64}(undef, block_sizes)
+# @time solve_mean!(a, K, y, λ)

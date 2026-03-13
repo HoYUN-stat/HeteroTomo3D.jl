@@ -13,12 +13,8 @@ include("cdf.jl")
 include("tomokernel.jl")
 include("blocktensor.jl")
 include("blockfpca.jl")
-# include("meanrepre.jl")
-
-# include("meanrecons.jl")
-
-# include("covrepre.jl")
-
+# include("representer.jl")
+# include("reconstruction.jl")
 # include("phantom.jl")
 # include("xray.jl")
 

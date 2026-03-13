@@ -186,7 +186,6 @@ function fpca(k::Int64, A::BlockDiagonal{T},
     b0 = BlockVector(rand(T, sum(BS)), BS) # Initial vector
 
     Tri, U = conj_lanczos(b0, A, K; itmax=itmax)
-    # Tri, U = conj_lanczos(b0, D, C; itmax=itmax, reortho_level=:full)
 
     (λ, S) = eigen(Tri)
     pc_vals = λ[end:-1:end-k+1]  # Get the largest k eigenvalues
@@ -195,38 +194,3 @@ function fpca(k::Int64, A::BlockDiagonal{T},
     return pc_vals, pc_vecs
 end
 
-
-
-n = 10
-r = 5
-s = 5
-m = 50
-γ = 5.0
-λ = 1e-2
-@time X = rand_evaluation_grid(s, r, n, m)
-@time Q = rand_quaternion_grid(r, n)
-
-X_real = grid_to_real.(X.blocks, m)
-
-@time block_sizes = repeat([s * r], n);
-@time K = BlockMatrix{Float64}(undef, block_sizes, block_sizes)
-@time build_gram_matrix!(K, X, Q, γ);
-@time issymmetric(K)
-eigvals(K)[1]
-
-A = rand_block_diag(block_sizes)
-
-k = 5
-mypca = fpca(k, A, K; itmax=50)
-Λ = mypca[1]
-V = mypca[2]
-
-# Similar to Idenity
-V' * K * V ≈ I(k)
-B = K * V 
-A * B
-≈ V * Diagonal(Λ)
-
-# a = BlockVector{Float64}(undef, block_sizes)
-# y = BlockVector{Float64}(undef, block_sizes)
-# @time solve_mean!(a, K, y, λ)

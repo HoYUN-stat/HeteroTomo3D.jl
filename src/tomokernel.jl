@@ -24,8 +24,8 @@ julia> backproject(q, (0.1, -0.2), (0.3, -0.4, 0.5), 10.0)
 """
 function backproject(q::UnitQuaternion{T}, x::NTuple{2,T}, z::NTuple{3,T}, γ::T) where {T<:Real}
     dist2_x = x[1]^2 + x[2]^2
-
-    if dist2_x >= one(T)
+    dist2_z = z[1]^2 + z[2]^2 + z[3]^2
+    if dist2_x >= one(T) || dist2_z >= one(T)
         return zero(T)
     end
 

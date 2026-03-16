@@ -1,7 +1,6 @@
 # module HeteroTomo3D
 
 using LinearAlgebra
-using Distributions
 using SpecialFunctions
 using Random
 using BlockArrays
@@ -25,7 +24,7 @@ export antid_erf, affine_erf, bvncdf
 export backproject, collinear_inner_product, noncollinear_inner_product, inner_product, grid_to_real, build_gram_matrix!
 export AbstractBlockTensor, BlockOuter, AdjointBlockOuter, CovFwdTensor, AdjointCovFwdTensor
 export conj_lanczos, fpca
-export KernelPhantom3D, xray_transform
+export KernelPhantom3D, rand_center_grid, xray_transform
 
 # export rand_shepp_logan_3d, TruncationType, HyperbolicTangent, ArcTangent, Gudermannian
 # export xray_transform, trilinear_interp

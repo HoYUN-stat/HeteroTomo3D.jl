@@ -1,3 +1,21 @@
+n = 1
+r = 10
+s = 50
+m = 50
+L = 5
+
+X = rand_evaluation_grid(s, r, n, m)
+Q = rand_quaternion_grid(r, n)
+
+weights = randn(L, n)
+centers = rand_center_grid(L; seed=123)
+gammas = repeat([5.0], L)
+phantom = KernelPhantom3D(weights, centers, gammas)
+
+projections = xray_transform(phantom, X, Q);
+
+#Turn vec(projections) into a BlockVector
+y = BlockVector{Float64}(undef, repeat([s * r], n))
 
 n = 50
 r = 5
@@ -10,7 +28,7 @@ m = 50
 
 X_real = grid_to_real.(X.blocks, m)
 
-@time block_sizes = repeat([s * r], n);
+block_sizes = repeat([s * r], n);
 @time K = BlockMatrix{Float64}(undef, block_sizes, block_sizes);
 @time build_gram_matrix!(K, X, Q, γ);
 @time issymmetric(K)
@@ -563,3 +581,9 @@ function plot_spline()
 end
 
 plot_spline()
+
+
+
+
+
+

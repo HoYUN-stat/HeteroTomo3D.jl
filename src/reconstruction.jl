@@ -50,7 +50,7 @@ Evaluates the reconstruction across 3D grid points using the mean representer th
 """
 function xray_recons!(F::AbstractArray{T}, coefficients::Vector{T}, X::EvaluationGrid{I}, Q::QuaternionGrid{T}, γ::T) where {T<:Real,I<:Integer}
     m = size(F, 1)
-    @threads for iz in 1:m
+    for iz in 1:m
         z3 = 2.0 * (iz - 1) / (m - 1) - 1.0
         for iy in 1:m
             z2 = 2.0 * (iy - 1) / (m - 1) - 1.0

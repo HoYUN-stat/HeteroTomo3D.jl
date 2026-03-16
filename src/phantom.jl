@@ -52,9 +52,9 @@ function rand_center_grid(L::Int; seed::Union{Nothing,Int}=nothing)
     for l in 1:L
         # Rejection sampling
         while true
-            x = rand(Float64)
-            y = rand(Float64)
-            z = rand(Float64)
+            x = rand(Float64) * 2.0 - 1.0 # Uniform in [-1, 1]
+            y = rand(Float64) * 2.0 - 1.0 # Uniform in [-1, 1]
+            z = rand(Float64) * 2.0 - 1.0 # Uniform in [-1, 1]
             if x^2 + y^2 + z^2 <= 1.0
                 centers[l] = (x, y, z)
                 break

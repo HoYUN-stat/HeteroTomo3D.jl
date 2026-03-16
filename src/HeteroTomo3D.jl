@@ -1,4 +1,4 @@
-# module HeteroTomo3D
+module HeteroTomo3D
 
 using LinearAlgebra
 using SpecialFunctions
@@ -14,8 +14,7 @@ include("tomokernel.jl")
 include("blocktensor.jl")
 include("blockfpca.jl")
 include("phantom.jl")
-# include("representer.jl")
-# include("reconstruction.jl")
+include("reconstruction.jl")
 
 
 export UnitQuaternion, projection_axis, planar_rotation, shortest_arc, rotate
@@ -25,6 +24,7 @@ export backproject, collinear_inner_product, noncollinear_inner_product, inner_p
 export AbstractBlockTensor, BlockOuter, AdjointBlockOuter, CovFwdTensor, AdjointCovFwdTensor
 export conj_lanczos, fpca
 export KernelPhantom3D, rand_center_grid, xray_transform
+export xray_recons, xray_recons!
 
 # export rand_shepp_logan_3d, TruncationType, HyperbolicTangent, ArcTangent, Gudermannian
 # export xray_transform, trilinear_interp
@@ -32,4 +32,4 @@ export KernelPhantom3D, rand_center_grid, xray_transform
 # export build_mean_gram!, solve_mean!
 # export reconstruct_mean
 
-# end
+end

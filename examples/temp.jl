@@ -47,8 +47,8 @@ y = vec(projections) # Flatten the projections to a vector for the linear system
 block_sizes = repeat([s * r], n);
 @time K = BlockMatrix{Float64}(undef, block_sizes, block_sizes);
 @time build_gram_matrix!(K, X, Q, γ);
-# @time issymmetric(K)
-# eigvals(K)[1]
+@time issymmetric(K)
+eigvals(K)[1]
 
 a_zero = zeros(size(K, 1)) # Create a zero initial guess for MINRES
 kc_mean = KrylovConstructor(a_zero)
@@ -119,8 +119,35 @@ Colorbar(fig[1, 3], vol2, label="Density")
 
 display(fig)
 
+# # 2. Plot Side-by-Side Volumes
+# fig = Figure(size=(1000, 500))
+# bounds = (-1.0, 1.0)
 
-save_path = joinpath("..", "docs", "src", "assets", "mean_recons.png")
-save(save_path, fig)
+# # Extract the base colors from viridis
+# base_cmap = to_colormap(:viridis)
 
-display(fig)
+# # Create a new colormap where the alpha scales with the value
+# # cmap_alpha = [RGBAf(c.r, c.g, c.b, (i / length(base_cmap))^2) for (i, c) in enumerate(base_cmap)]
+# cmap_alpha = [RGBAf(c.r, c.g, c.b, min(1.0f0, 1.5f0 * (i / length(base_cmap)))) for (i, c) in enumerate(base_cmap)]
+
+# # Sync the maximum density across both plots so their colorbars match perfectly
+# max_density = max(maximum(F_true), maximum(F))
+
+# ax1 = Axis3(fig[1, 1], title="True 3D Phantom", aspect=:data)
+# vol1 = volume!(ax1, bounds, bounds, bounds, F_true,
+#     algorithm=:absorption,
+#     colormap=cmap_alpha,
+#     colorrange=(0.0, max_density), # Lock the bottom of the colormap to exactly 0.0
+#     lowclip=:transparent)          # Force all negative values to be completely invisible
+
+# ax2 = Axis3(fig[1, 2], title="Reconstructed Phantom", aspect=:data)
+# vol2 = volume!(ax2, bounds, bounds, bounds, F,
+#     algorithm=:absorption,
+#     colormap=cmap_alpha,
+#     colorrange=(0.0, max_density),
+#     lowclip=:transparent)
+
+# # Colorbar(fig[1, 2], vol1, label="Density")
+# Colorbar(fig[1, 3], vol2, label="Density")
+
+# display(fig)

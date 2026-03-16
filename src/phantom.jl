@@ -1,127 +1,68 @@
 """
-    TruncationType
+    KernelPhantom3D{T<:Real}
 
-Abstract type for the truncation function type ``h`` with ``h(0; \\gamma)=0``.
+A 3D phantom represented functionally as a linear combination of Gaussian kernels.
+This avoids heavy 3D voxel grid allocations and provides exact analytic X-ray transforms.
+```math
+f(\\mathbf{z}) = \\sum_{l=1}^L a_l \\exp(-\\gamma_l \\| \\mathbf{z} - \\mathbf{c}_l \\|^2)
+```
+
+# Fields
+- `weights::Vector{T}`: The weight coefficients for each Gaussian kernel.
+- `centers::Vector{NTuple{3,T}}`: The center coordinates of each Gaussian kernel in 3D space.
+- `gammas::Vector{T}`: The bandwidth parameters of each 3D Gaussian kernel.
 """
-abstract type TruncationType end
-
-struct HyperbolicTangent <: TruncationType
-    γ::Float64
+struct KernelPhantom3D{T<:Real}
+    weights::Vector{T}
+    centers::Vector{NTuple{3,T}}
+    gammas::Vector{T}
 end
 
-struct ArcTangent <: TruncationType
-    γ::Float64
-end
-
-struct Gudermannian <: TruncationType
-    γ::Float64
-end
-
-"""
-    truncation(r2::Float64, trunc::TruncationType)
-
-Computes the smooth boundary truncation value using multiple dispatch for zero-allocation performance.
-The input `r2` is the squared radius ``r^2 = (x/a)^2 + (y/b)^2 + (z/c)^2``.
-"""
-@inline function truncation(r2::Float64, trunc::HyperbolicTangent)
-    t1 = tanh(trunc.γ * (1.0 - r2))^2
-    t2 = tanh(trunc.γ * r2)^2
-    return t1 / (t1 + t2)
-end
-
-@inline function truncation(r2::Float64, trunc::ArcTangent)
-    t1 = atan(trunc.γ * (1.0 - r2))^2
-    t2 = atan(trunc.γ * r2)^2
-    return t1 / (t1 + t2)
-end
-
-@inline function truncation(r2::Float64, trunc::Gudermannian)
-    t1 = 2.0 * atan(trunc.γ * sinh((1.0 - r2) / 2.0))^2
-    t2 = 2.0 * atan(trunc.γ * sinh(r2 / 2.0))^2
-    return t1 / (t1 + t2)
-end
-
-"""
-    rand_shepp_logan_3d(m::Int; λ=2.0, seed=nothing, trunc=nothing)
-
-Generates an ``m \\times m \\times m`` random 3D Shepp-Logan phantom inscribed in a unit sphere.
-Executes with zero inner-loop heap allocations via Tuple unrolling and multithreading.
-"""
-function rand_shepp_logan_3d(m::Int;
-    λ::Float64=2.0,
-    seed::Union{Int,Nothing}=nothing,
-    trunc::T=nothing) where {T<:Union{Nothing,TruncationType}}
-
-    # 1. Allocate the single 3D volume
-    phantom = zeros(Float64, m, m, m)
-    @assert m > 1 "Grid size m must be greater than 1"
-
-    # 2. Hardcoded 3D Geometry as Tuples (Forces compiler unrolling = 0 allocations)
-    # Extruding the 2D logic to 3D with standard Z-axis parameters
-    cx = (0.0, 0.0, 0.22, -0.22, 0.0, 0.0)
-    cy = (0.0, -0.0184, 0.0, 0.0, 0.35, -0.455)
-    cz = (0.0, 0.0, 0.0, 0.0, 0.25, -0.25)
-
-    a = (0.69, 0.55, 0.15, 0.20, 0.21, 0.20)
-    b = (0.92, 0.75, 0.31, 0.41, 0.25, 0.20)
-    c = (0.81, 0.70, 0.22, 0.25, 0.25, 0.20)
-
-    # Precompute trig constants for the Z-axis rotations
-    theta_z = (0.0, 0.0, -18.0, 18.0, 0.0, 0.0)
-    cos_t = Tuple(cosd(th) for th in theta_z)
-    sin_t = Tuple(sind(th) for th in theta_z)
-
-    grayLevel = (10.0, -7.0, -2.0, -2.0, 4.0, 3.0)
-
-    # 3. Generate Random Noise
-    if seed !== nothing
-        Random.seed!(seed)
+# Callable struct to evaluate the phantom at a 3D point z
+function (phantom::KernelPhantom3D{T})(z::NTuple{3,T}) where {T<:Real}
+    val = zero(T)
+    @inbounds @simd for l in eachindex(phantom.centers)
+        c = phantom.centers[l]
+        d2 = (z[1] - c[1])^2 + (z[2] - c[2])^2 + (z[3] - c[3])^2
+        val += phantom.weights[l] * exp(-phantom.gammas[l] * d2)
     end
+    return val
+end
 
-    noise = randn(6) .* λ
-    noise[1] = 0.0 # Standard background remains static
-    noise[2] = 0.0
+"""
+    xray_transform(phantom::KernelPhantom3D{T}, q::UnitQuaternion{T}, x::NTuple{2, T}) -> T
 
-    # Convert final intensities back to a Tuple for loop speed
-    xi = Tuple(grayLevel[i] + noise[i] for i in 1:6)
+Analytically computes the X-ray transform of the `KernelPhantom3D` evaluated at a single 2D projection coordinate `x` and rotation `q` using `backproject`.
+"""
+function xray_transform(phantom::KernelPhantom3D{T}, q::UnitQuaternion{T}, x::NTuple{2,T}) where {T<:Real}
+    val = zero(T)
+    @inbounds for l in eachindex(phantom.centers)
+        val += phantom.weights[l] * backproject(q, x, phantom.centers[l], phantom.gammas[l])
+    end
+    return val
+end
 
-    # 4. Multithreaded Voxel Generation
-    Base.Threads.@threads for k in 1:m
-        @inbounds z = 2.0 * (k - 1) / (m - 1) - 1.0
+"""
+    xray_transform(phantom::KernelPhantom3D{T}, X::EvaluationGrid{I}, Q::QuaternionGrid{T}) where {T<:Real, I<:Integer}
 
-        for j in 1:m
-            @inbounds y = 2.0 * (j - 1) / (m - 1) - 1.0
+Evaluates the analytic X-ray transform of a `KernelPhantom3D` over the specified evaluation and rotation grids.
+Returns a 3D array of size `(s, r, n)`.
+"""
+function xray_transform(phantom::KernelPhantom3D{T}, X::EvaluationGrid{I}, Q::QuaternionGrid{T}) where {T<:Real,I<:Integer}
+    s, r, n = size(X)
+    m = X.m
+    projections = Array{T,3}(undef, s, r, n)
 
-            @simd for i in 1:m
-                @inbounds x = 2.0 * (i - 1) / (m - 1) - 1.0
-
-                val = 0.0
-
-                # Because we used Tuples, LLVM unrolls this 1..6 loop completely
-                for l in 1:6
-                    dx = x - cx[l]
-                    dy = y - cy[l]
-                    dz = z - cz[l]
-
-                    rot_x = cos_t[l] * dx + sin_t[l] * dy
-                    rot_y = -sin_t[l] * dx + cos_t[l] * dy
-                    rot_z = dz
-
-                    r2 = (rot_x / a[l])^2 + (rot_y / b[l])^2 + (rot_z / c[l])^2
-
-                    if r2 < 1.0
-                        if T === Nothing
-                            val += xi[l]
-                        else
-                            val += xi[l] * truncation(r2, trunc)
-                        end
-                    end
-                end
-
-                @inbounds phantom[i, j, k] = val
+    Threads.@threads for i in 1:n
+        for j in 1:r
+            @inbounds q = Q[j, i]
+            for k in 1:s
+                @inbounds x_int = X[k, j, i]
+                x_real = grid_to_real(x_int, m, T)
+                projections[k, j, i] = xray_transform(phantom, q, x_real)
             end
         end
     end
 
-    return phantom
+    return projections
 end

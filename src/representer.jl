@@ -1,37 +1,3 @@
-# This code generates Figure 3 in the paper
-# Load the necessary packages
-using Pkg
-
-installed_packages = Set(pkg.name for pkg in values(Pkg.dependencies()))
-if !("CovIterSolvers" in installed_packages)
-    Pkg.add(url="https://github.com/HoYUN-stat/CovIterSolvers.jl")
-end
-
-required_packages = ["CairoMakie", "Dates", "LinearAlgebra", "Random", "Statistics", "BSplineKit", "Krylov"]
-packages_to_install = String[]
-for pkg_name in required_packages
-    if pkg_name ∉ installed_packages
-        push!(packages_to_install, pkg_name)
-    end
-end
-
-if isempty(packages_to_install)
-    println("All required packages are already installed.")
-else
-    println("Installing missing packages")
-    Pkg.add(packages_to_install)
-    println("Installation complete.")
-end
-
-using CovIterSolvers
-using CairoMakie #v0.10.12
-using Dates
-using LinearAlgebra
-using Random: seed!
-using Statistics: median
-using BSplineKit: BSplineBasis, BSplineOrder, galerkin_matrix # For solution norm callback
-using Krylov
-import Krylov: statistics, solution
 
 # Set the global parameters
 σ::Float64 = 1e-1           #Standard deviation σ

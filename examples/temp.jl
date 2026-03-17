@@ -47,8 +47,8 @@ y = vec(projections) # Flatten the projections to a vector for the linear system
 block_sizes = repeat([s * r], n);
 @time K = BlockMatrix{Float64}(undef, block_sizes, block_sizes);
 @time build_gram_matrix!(K, X, Q, γ);
-@time issymmetric(K)
-eigvals(K)[1]
+# @time issymmetric(K)
+# eigvals(K)[1]
 
 a_zero = zeros(size(K, 1)) # Create a zero initial guess for MINRES
 kc_mean = KrylovConstructor(a_zero)
@@ -118,6 +118,10 @@ vol2 = contour!(ax2, bounds, bounds, bounds, F,
 Colorbar(fig[1, 3], vol2, label="Density")
 
 display(fig)
+
+
+save_path = joinpath("..", "docs", "src", "assets", "mean_recons.png")
+save(save_path, fig)
 
 # # 2. Plot Side-by-Side Volumes
 # fig = Figure(size=(1000, 500))

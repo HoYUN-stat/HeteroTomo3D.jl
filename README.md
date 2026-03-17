@@ -6,7 +6,7 @@
 
 
 **HeteroTomo3D.jl** is a Julia package designed for 3D heterogeneous tomographic reconstruction using Reproducing Kernel Hilbert Space (RKHS) methods. 
-Built for high-performance via advanced numerical linear algebra techniques, it allows for large-scale estimation directly on personal laptops by leveraging zero-heap allocation architectures, strict use of `@inbounds` and `@simd`, and multithreaded operations to heavily optimize space complexity.
+Built for high-performance via advanced numerical linear algebra techniques, it allows for large-scale estimation by leveraging zero-heap allocation architectures, strict use of `@inbounds` and `@simd`, and multithreaded operations to heavily optimize space complexity.
 
 ## 🚀 Key Features
 
@@ -32,7 +32,6 @@ For full documentation, function references, and examples, visit the [developmen
 You can install the package directly from GitHub using the Julia REPL:
 
 ```julia
-using Pkg
-Pkg.add(url="https://github.com/HoYUN-stat/HeteroTomo3D.jl")
+julia> ]
+pkg> add(url="https://github.com/HoYUN-stat/HeteroTomo3D.jl")
 ```
-

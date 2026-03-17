@@ -5,49 +5,129 @@ CurrentModule = HeteroTomo3D
 # Mean Estimation
 This section covers the estimation of the 3D mean function using the RKHS representer theorem and direct linear solvers.
 
-## Data Structures
-```@docs
-EvaluationGrid
-QuaternionGrid
-BlockDiag
-LazyKhatri
+## Data Generation
+```@example sinogram_generation
+using HeteroTomo3D, BlockArrays, LinearAlgebra
+
+
+# --------------------------------------------------------------------
+#          Global Parameters (Deterministic Noiseless Setting)
+# --------------------------------------------------------------------
+n = 1       # Single Deterministic Function
+r = 50      # Number of quaternions
+s = 100      # Number of evaluation points per viewing angles
+m = 50      # Resolution for reconstruction
+L = 4       # Number of Gaussian components in the phantom
+γ = 10.0    # Kernel bandwidth for RKHS framework
+
+
+# --------------------------------------------------------------------
+#                      Data Generation
+# --------------------------------------------------------------------
+# Generate Wrappers for 3D Phantom
+centers = [
+    (0.3, 0.3, 0.3),
+    (-0.3, -0.3, 0.3),
+    (-0.4, 0.4, -0.4),
+    (0.3, -0.3, -0.3)
+]
+weights = reshape([1.0, 0.8, 0.6, 0.4], L, n)
+gammas = [5.0, 4.0, 6.0, 4.0]
+
+phantom = KernelPhantom3D(weights, centers, gammas)
+
+# Generate the forward setup
+X = rand_evaluation_grid(s, r, n, m)    # Evaluation grid for the forward operator
+Q = rand_quaternion_grid(r, n)          # Random quaternion grid for the forward operator
+projections = xray_transform(phantom, X, Q) # Size: (s, r, n)
+y = vec(projections) # Flatten the projections to a vector for the linear system
 ```
 
-## Representer Theorem Solver
+
+## Representer Theorem Solver via MINRES
 The mean function is estimated by solving the system 
 $$ (\mathbf{K} + \lambda \mathbf{I}) \mathbf{a} = \mathbf{y}.$$
 
-```@docs
-build_mean_gram!
-solve_mean!
+```@example minres_mean
+block_sizes = repeat([s * r], n);
+@time K = BlockMatrix{Float64}(undef, block_sizes, block_sizes);
+@time build_gram_matrix!(K, X, Q, γ);
+
+using Krylov
+
+a_zero = zeros(size(K, 1)) # Create a zero initial guess for MINRES
+kc_mean = KrylovConstructor(a_zero)
+workspace_mean = MinresWorkspace(kc_mean)
+@time minres!(workspace_mean, K, y; history=true, itmax=20)
+
+a_sol = Krylov.solution(workspace_mean)
+stats_mean = Krylov.statistics(workspace_mean)
 ```
 
 ## 3D Reconstruction
 Once the coefficients $\mathbf{a}$ are found, the continuous 3D volume is reconstructed via the evaluation tensor action.
 
-```@docs
-reconstruct_mean
+```@example recons_vec_to_phantom
+@time F = Array{Float64}(undef, m, m, m);
+@time xray_recons!(F, a_sol, X, Q, γ);
 ```
 
+We visualize this voxel alongside the true 3D phantom using `GLMakie.jl`.
+```@example phantom_visual
+using GLMakie
 
-## Example
+@time F_true = zeros(Float64, m, m, m);
+for iz in 1:m
+    z3 = 2.0 * (iz - 1) / (m - 1) - 1.0
+    for iy in 1:m
+        z2 = 2.0 * (iy - 1) / (m - 1) - 1.0
+        for ix in 1:m
+            z1 = 2.0 * (ix - 1) / (m - 1) - 1.0
 
-This example demonstrates the 3D X-ray transform applied to a 100x100x100 random Shepp-Logan phantom across 60 projection regular angles. To run this example:
+            # Unit ball cutoff matching the reconstruction
+            if z1^2 + z2^2 + z3^2 > 1.0
+                continue
+            end
 
-1.  Navigate to the `examples/` directory in your terminal.
+            val = 0.0
+            for l in 1:L
+                c = phantom.centers[l]
+                dist2 = (z1 - c[1])^2 + (z2 - c[2])^2 + (z3 - c[3])^2
+                val += phantom.weights[l, 1] * exp(-phantom.gammas[l] * dist2)
+            end
+            F_true[ix, iy, iz] = val
+        end
+    end
+end
 
-2.  Launch Julia and activate the local environment:
+# Compute the L2 relative error strictly in-place
+squared_diff = sum(abs2(F[i] - F_true[i]) for i in eachindex(F))
+squared_norm = sum(abs2, F_true)
 
-    ```sh
-    julia --project=.
-    ```
-3.  From the Julia REPL, run the script:
+rel_error = sqrt(squared_diff / squared_norm)
 
-    ```julia
-    include("test_fwd.jl")
-    ```
+# 2. Plot Side-by-Side Volumes using Isosurfaces
+fig = Figure(size=(1000, 500))
+bounds = (-1.0, 1.0)
 
-This will generate the interactive 3D visualization and save the output image `forward_simulation.png` to your assets folder.
-Here is the final layout showing the true 3D phantom density contours, the center sinogram, and the 2D integrated intensity shadows at 0° and 90°.
+ax1 = Axis3(fig[1, 1], title="True 3D Phantom", aspect=:data)
+# levels=6 draws 6 distinct density shells. alpha=0.4 makes them glassy so you can see inside.
+vol1 = contour!(ax1, bounds, bounds, bounds, F_true,
+    levels=6,
+    colormap=:viridis,
+    alpha=0.4)
 
-![3D Forward Simulation](assets/forward_simulation.png)
+ax2 = Axis3(fig[1, 2], title="Reconstructed Phantom (Rel. Error (L2): $(round(rel_error * 100, digits=2))%)", aspect=:data)
+vol2 = contour!(ax2, bounds, bounds, bounds, F,
+    levels=6,
+    colormap=:viridis,
+    alpha=0.4)
+
+Colorbar(fig[1, 3], vol2, label="Density")
+
+display(fig)
+```
+
+This will generate the interactive 3D visualization.
+
+![3D Forward Simulation](assets/mean_recons.png)

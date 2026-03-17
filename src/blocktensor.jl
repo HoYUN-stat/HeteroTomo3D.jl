@@ -31,14 +31,7 @@ julia> using HeteroTomo3D, BlockArrays;
 
 julia> K = BlockMatrix(rand(3, 3), [2, 1], [2, 1]);
 
-julia> L = K ⊙ K
-Block Outer Product Tensor: L = K ⊙ K
- Action: B = L(A), where B[j] = ∑_i K[j, i] A[i] K[i, j]'
-K: 2×2-blocked 3×3 BlockMatrix{Float64}:
- 0.390663  0.830517  │  0.264633
- 0.802763  0.666519  │  0.670233
- ────────────────────┼──────────
- 0.928832  0.133315  │  0.713226
+julia> L = K ⊙ K;
 
 julia> L isa BlockOuter
 true

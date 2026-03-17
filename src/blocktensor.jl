@@ -27,9 +27,18 @@ that both operands are the same object (e.g., `K ⊙ K`).
 
 # Examples
 ```jldoctest
+julia> using HeteroTomo3D, BlockArrays;
+
 julia> K = BlockMatrix(rand(3, 3), [2, 1], [2, 1]);
 
-julia> L = K ⊙ K;
+julia> L = K ⊙ K
+Block Outer Product Tensor: L = K ⊙ K
+ Action: B = L(A), where B[j] = ∑_i K[j, i] A[i] K[i, j]'
+K: 2×2-blocked 3×3 BlockMatrix{Float64}:
+ 0.390663  0.830517  │  0.264633
+ 0.802763  0.666519  │  0.670233
+ ────────────────────┼──────────
+ 0.928832  0.133315  │  0.713226
 
 julia> L isa BlockOuter
 true
@@ -87,6 +96,8 @@ Represents a covariance-based forward operator `L = O * (K ⊙ K) * O'`, where `
 
 # Examples
 ```jldoctest
+julia> using HeteroTomo3D, BlockArrays;
+
 julia> K = BlockMatrix(rand(3, 3), [2, 1], [2, 1]);
 
 julia> L = CovFwdTensor(K);
@@ -139,7 +150,9 @@ The operator `L'` is defined by its action on a `BlockDiagonal` matrix `A`:
 - `workspace::Matrix`: Pre-allocated matrix to be used for intermediate calculations.
 
 # Examples
-```julia-repl
+```jldoctest
+julia> using HeteroTomo3D, BlockArrays;
+
 julia> E = BlockMatrix(rand(3, 2), [2, 1], [1, 1]);
 
 julia> L_adj = (E ⊙ E)';
@@ -185,7 +198,9 @@ Represents the adjoint of the `CovFwdTensor` operator.
 - `workspace::Matrix`: Pre-allocated matrix to be used for intermediate calculations.
 
 # Examples
-```julia-repl
+```jldoctest
+julia> using HeteroTomo3D, BlockArrays;
+
 julia> F = BlockMatrix(rand(3, 2), [2, 1], [1, 1]);
 
 julia> L = CovFwdTensor(F);

@@ -33,11 +33,11 @@ Base.inv(q::UnitQuaternion) = conj(q)
 Overloads the multiplication operator to compose two unit quaternions 'q1' and 'q2'.
 
 ```jldoctest
-julia> q_id = UnitQuaternion(1.0, 0.0, 0.0, 0.0)
-UnitQuaternion{Float64}(1.0, 0.0, 0.0, 0.0)
+julia> using HeteroTomo3D
 
-julia> q_test = UnitQuaternion(0.5, 0.5, 0.5, 0.5)
-UnitQuaternion{Float64}(0.5, 0.5, 0.5, 0.5)
+julia> q_id = UnitQuaternion(1.0, 0.0, 0.0, 0.0);
+
+julia> q_test = UnitQuaternion(0.5, 0.5, 0.5, 0.5);
 
 julia> q_test * q_id == q_test
 true
@@ -62,6 +62,8 @@ end
 Computes the absolute value operator to compute the norm of a unit quaternion.
 
 ```jldoctest
+julia> using HeteroTomo3D
+
 julia> q1 = UnitQuaternion(0.5, 0.5, 0.5, 0.5);
 
 julia> q2 = UnitQuaternion(1.0, 0.0, 0.0, 0.0);
@@ -103,10 +105,15 @@ Generates a random `UnitQuaternion` uniformly distributed over ``\\mathbb{S}^3``
 ```jldoctest
 julia> using Random; Random.seed!(42);
 
+julia> using HeteroTomo3D;
+
 julia> q = rand(UnitQuaternion);
 
 julia> abs(q) ≈ 1.0
 true
+
+julia> p = rand(Xoshiro(3), UnitQuaternion)
+UnitQuaternion{Float64}(-0.3668215705606623, 0.7533620475506815, 0.39646901176823995, 0.3750998312305261)
 ```
 """
 function Random.rand(rng::Random.AbstractRNG, ::Random.SamplerType{UnitQuaternion})
@@ -126,13 +133,16 @@ Rotates a 3D vector `v` by the unit quaternion `q`, i.e., computes
 ```
 
 ```jldoctest
-julia> using Random; Random.seed!(42);
+julia> using Random; 
 
-julia> q = rand(UnitQuaternion);
+julia> using HeteroTomo3D;
+
+julia> q = rand(Xoshiro(123), UnitQuaternion);
 
 julia> v = (1.0, 0.0, 0.0);
 
-julia> v_rot = rotate(q, v);
+julia> v_rot = rotate(q, v)
+(-0.023923221913278114, 0.9601351868146877, -0.2785105069716637)
 
 julia> length(v_rot) == 3
 true
@@ -163,13 +173,15 @@ Extracts the projection axis ``\\mathbf{r}_{\\mathbf{q}} = \\mathbf{R}_{\\mathbf
 ```jldoctest
 julia> using Random; Random.seed!(42);
 
+julia> using HeteroTomo3D;
+
 julia> q = rand(UnitQuaternion);
 
 julia> e3 = (0.0, 0.0, 1.0);
 
 julia> r3 = rotate(inv(q), e3);
 
-julia> all(isapprox.(projection_axis(q), (r3.x, r3.y, r3.z), atol=1e-14))
+julia> all(isapprox.(projection_axis(q), r3, atol=1e-14))
 true
 ```
 """
@@ -190,6 +202,8 @@ end
 Computes the shortest-arc rotation ``\\mathbf{E}(\\mathbf{u}) \\in SO(3)`` mapping ``\\mathbf{e}_3`` to ``\\mathbf{u} \\in \\mathbb{S}^2``. Requires ``\\mathbf{u} \\in \\mathbb{S}^2 \\backslash \\{-\\mathbf{e}_3\\}`` for uniqueness.
 
 ```jldoctest
+julia> using HeteroTomo3D;
+
 julia> using Random; Random.seed!(42);
 
 julia> u = randn(3);
@@ -227,6 +241,8 @@ Extracts the first column of the 2D in-plane rotation matrix,
 i.e., it returns a Tuple (c, s) representing ``\\begin{bmatrix} c & -s \\\\ s & c \\end{bmatrix} \\in SO(2)`` that rotates the detector plane around the projection axis.
 
 ```jldoctest
+julia> using HeteroTomo3D;
+
 julia> using Random; Random.seed!(42);
 
 julia> q = rand(UnitQuaternion);

@@ -14,7 +14,9 @@ Evaluates the point of the tomographic feature map analytically, i.e., computes
 - `γ::T`: Bandwidth parameter for Gaussian kernel
 
 # Examples
-```julia-repl
+```jldoctest
+julia> using HeteroTomo3D;
+
 julia> q = shortest_arc(0.0, 1.0, 0.0)
 UnitQuaternion{Float64}(0.7071067811865476, 0.7071067811865475, -0.0, 0.0)
 
@@ -51,12 +53,12 @@ Evaluates the inner product between two tomographic feature maps when the viewin
 - `γ::T`: Bandwidth parameter for Gaussian kernel
 
 # Examples
-```julia-repl
+```jldoctest
+julia> using HeteroTomo3D;
+
 julia> q_parallel = UnitQuaternion(sqrt(2) / 2, 0.0, 0.0, sqrt(2) / 2);
 
-julia> x1 = (0.1, -0.2); x2 = (0.3, -0.4);
-
-julia> γ = 5.0;
+julia> x1 = (0.1, -0.2); x2 = (0.3, -0.4); γ = 5.0;
 
 julia> val1 = collinear_inner_product(q_parallel, x1, x2, γ)
 0.33994859230087116
@@ -121,16 +123,21 @@ Evaluates the inner product between two tomographic feature maps when the viewin
 - `γ::T`: Bandwidth parameter for Gaussian kernel
 
 # Examples
-```julia-repl
-julia> q = rand(UnitQuaternion);
+```jldoctest
+julia> using HeteroTomo3D;
+
+julia> using Random; Random.seed!(123);
+
+julia> q = rand(UnitQuaternion)
+UnitQuaternion{Float64}(-0.28204731317456205, -0.6391304265753365, -0.7091703923721498, -0.09507347442567807)
 
 julia> x1 = (0.1, -0.2); x2 = (0.3, -0.4); γ = 5.0;
 
 julia> val1 = noncollinear_inner_product(q, x1, x2, γ)
-0.1864041860183954
+0.2589394161448219
 
 julia> val2 = noncollinear_inner_product(inv(q), x2, x1, γ)
-0.1864041860183954
+0.2589394161448219
 
 julia> isapprox(val1, val2, atol=1e-10) # Symmetry check
 true

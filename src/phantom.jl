@@ -30,15 +30,17 @@ Create `L` random 3D centers within a unit sphere.
 - `seed::Union{Nothing, Int}`: Random seed for reproducibility. Defaults to `nothing`.
 
 # Examples
-```julia-repl
+```jldoctest
+julia> using HeteroTomo3D;
+
 julia> using Random; Random.seed!(42);
 
 julia> L = 2;
 
 julia> centers = rand_center_grid(L; seed=42)
 2-element Vector{Tuple{Float64, Float64, Float64}}:
- (0.6293451231426089, 0.4503389405961936, 0.47740714343281776)
- (0.7031298490032014, 0.6733461456394962, 0.16589443479313404)
+ (0.25869024628521786, -0.09932211880761277, -0.04518571313436448)
+ (0.4062596980064028, 0.3466922912789925, -0.6682111304137319)
 ```
 
 See also [`EvaluationGrid`](@ref), [`rand_quaternion_grid`](@ref).

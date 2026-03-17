@@ -12,6 +12,8 @@
 - `m::Int64`: Voxel grid resolution/dimension parameter.
 
 ```jldoctest
+julia> using HeteroTomo3D;
+
 julia> s, r, n, m = 2, 3, 2, 64;
 
 julia> blocks = fill((1, 1), s, r, n);
@@ -62,7 +64,7 @@ The block array is filled with random integers in the range [1, m].
 
 # Examples
 ```jldoctest
-julia> using Random; 
+julia> using HeteroTomo3D, Random;
 
 julia> eval_grid = rand_evaluation_grid(2, 3, 1, 64; seed=123);
 
@@ -158,6 +160,8 @@ Each quaternion is randomly sampled from the uniform distribution on the 3-spher
 
 # Examples
 ```jldoctest
+julia> using HeteroTomo3D, Random;
+
 julia> quat_grid = rand_quaternion_grid(3, 2; seed=123);
 
 julia> size(quat_grid)
@@ -193,7 +197,9 @@ Blocked array of square matrices of type `T` arranged in a block diagonal struct
 - `BlockDiagonal{T, R<:(AbstractArray{<:AbstractArray{T, 2}, 1})} <: AbstractArray{T, 1} <: Any`
 
 # Examples
-```julia-repl
+```jldoctest
+julia> using HeteroTomo3D;
+
 julia> A = [1 2; 3 4];
 
 julia> B = [5 6; 8 9];
@@ -282,7 +288,9 @@ The blocks are created as square matrices according to the specified sizes.
 
 
 # Examples
-```julia-repl
+```jldoctest
+julia> using HeteroTomo3D;
+
 julia> block_sizes = [2, 1];
 
 julia> bd = zero_block_diag(block_sizes);
@@ -322,7 +330,9 @@ The blocks are created as square matrices according to the specified sizes.
 - `block_sizes::Vector{Int}`: A vector of integers specifying the size of each square block.
 
 # Examples
-```julia-repl
+```jldoctest
+julia> using HeteroTomo3D;
+
 julia> block_sizes = [2, 3];
 
 julia> bd = undef_block_diag(UInt8, block_sizes);
@@ -367,15 +377,17 @@ The blocks are created as square matrices according to the specified sizes.
   reproducibility. Defaults to `nothing`.
 
 # Examples
-```julia-repl
+```jldoctest
+julia> using Random;
+
+julia> using HeteroTomo3D;
+
 julia> block_sizes = [2, 1];
 
 julia> bd = rand_block_diag(block_sizes; seed=123);
 
-julia> bd.blocks[1]
-2×2 Matrix{Float64}:
- 0.521214  0.890879
- 0.586807  0.190907
+julia> size(bd.blocks[1])
+(2, 2)
 ```
 
 See also [`zero_block_diag`](@ref), [`undef_block_diag`](@ref).
@@ -383,7 +395,7 @@ See also [`zero_block_diag`](@ref), [`undef_block_diag`](@ref).
 function rand_block_diag(T::Type, BS::Vector{Int}; seed::Union{Nothing,Int}=nothing)
     # Create a random block diagonal matrix with specified block sizes
     if seed !== nothing
-        seed!(seed)
+        Random.seed!(seed)
     end
     myblocks = [rand(T, r, r) for r in BS]
     return BlockDiagonal(myblocks)
@@ -392,7 +404,7 @@ end
 function rand_block_diag(BS::Vector{Int}; seed::Union{Nothing,Int}=nothing)
     # Create a random block diagonal matrix with specified block sizes
     if seed !== nothing
-        seed!(seed)
+        Random.seed!(seed)
     end
     myblocks = [rand(r, r) for r in BS]
     return BlockDiagonal(myblocks)
@@ -413,7 +425,9 @@ The infix operator `⊙` is an alias for this function. It must be used on the s
 - `y::AbstractBlockVector`: The input block vector.
 
 # Examples
-```julia-repl
+```jldoctest
+julia> using HeteroTomo3D, BlockArrays;
+
 julia> v = [1.0, 2.0, 3.0];
 
 julia> y = BlockVector(v, [2, 1]);
@@ -455,7 +469,9 @@ Returns the sizes of the blocks in a `BlockDiagonal` matrix along the specified 
 - `d::Int`: The dimension along which to get the block sizes (1 for rows, 2 for columns).
 
 # Examples
-```julia-repl
+```jldoctest
+julia> using HeteroTomo3D, Random;
+
 julia> block_sizes = [2, 1];
 
 julia> bd = rand_block_diag(block_sizes; seed=123);

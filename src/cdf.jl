@@ -8,6 +8,15 @@ CDF of the standard normal distribution, i.e.,
 ```math
 \\Phi(x) = \\mathbb{P}(Z \\le x) = \\frac{1}{2} \\left( 1 + \\operatorname{erf}\\left( \\frac{x}{\\sqrt{2}} \\right) \\right).
 ```
+
+```jldoctest
+julia> using HeteroTomo3D;
+
+julia> unicdf(0.0)
+0.5
+julia> unicdf(1.0)
+0.8413447460685429
+```
 """
 unicdf(x::Float64) = 0.5 * (1 + erf(x / SQRT2)) #CDF of N(0, 1)
 
@@ -27,7 +36,9 @@ Compute the antiderivative of the scaled error function, i.e.,
 ```
 
 # Examples
-```julia-repl
+```jldoctest
+julia> using HeteroTomo3D;
+
 julia> antid_erf(2.0)
 3.5466412019384204
 ```
@@ -53,6 +64,8 @@ Compute the antiderivative of the Gaussian function with an affine argument, i.e
 
 # Examples
 ```jldoctest
+julia> using HeteroTomo3D;
+
 julia> w = 0.5; c = 0.1; γ = 10.0;
 
 julia> sign(affine_erf(w, c, γ)) == sign(w)
@@ -85,10 +98,14 @@ Output the CDF of the bivariate standard normal distribution with correlation co
 - `ρ::Float64`: Correlation coefficient in [-1, 1]
 
 # Examples
-```julia-repl
-julia> @btime 10^5 * bvncdf(-2.0, -2.0 , 0.0)
-34.323 ns (0 allocations: 0 bytes)
+```jldoctest
+julia> using HeteroTomo3D;
+
+julia> 10^5 * bvncdf(-2.0, -2.0 , 0.0)
 51.75685036595643
+
+julia> 10^5 * bvncdf(-2.0, -2.0 , 0.9)
+1336.5628669461514
 ```
 
 # Reference

@@ -6,7 +6,7 @@ CurrentModule = HeteroTomo3D
 This section covers the estimation of the 3D mean function using the RKHS representer theorem and direct linear solvers.
 
 ## Data Generation
-```@example sinogram_generation
+```julia-repl
 using HeteroTomo3D, BlockArrays, LinearAlgebra
 
 
@@ -46,37 +46,42 @@ y = vec(projections) # Flatten the projections to a vector for the linear system
 
 ## Representer Theorem Solver via MINRES
 The mean function is estimated by solving the system 
-$$ (\mathbf{K} + \lambda \mathbf{I}) \mathbf{a} = \mathbf{y}.$$
+```math
+(\mathbf{K} + \lambda \mathbf{I}) \mathbf{a} = \mathbf{y}.
+```
 
-```@example minres_mean
+```julia-repl
 block_sizes = repeat([s * r], n);
-@time K = BlockMatrix{Float64}(undef, block_sizes, block_sizes);
-@time build_gram_matrix!(K, X, Q, γ);
+K = BlockMatrix{Float64}(undef, block_sizes, block_sizes);
+build_gram_matrix!(K, X, Q, γ);
 
 using Krylov
 
 a_zero = zeros(size(K, 1)) # Create a zero initial guess for MINRES
 kc_mean = KrylovConstructor(a_zero)
 workspace_mean = MinresWorkspace(kc_mean)
-@time minres!(workspace_mean, K, y; history=true, itmax=20)
+minres!(workspace_mean, K, y; history=true, itmax=20)
 
 a_sol = Krylov.solution(workspace_mean)
 stats_mean = Krylov.statistics(workspace_mean)
 ```
 
 ## 3D Reconstruction
-Once the coefficients $\mathbf{a}$ are found, the continuous 3D volume is reconstructed via the evaluation tensor action.
+Once the coefficients ``\mathbf{a}`` are found, the continuous 3D volume is reconstructed via the evaluation tensor action.
 
-```@example recons_vec_to_phantom
-@time F = Array{Float64}(undef, m, m, m);
-@time xray_recons!(F, a_sol, X, Q, γ);
+```@docs
+xray_recons
+xray_recons!
 ```
 
 We visualize this voxel alongside the true 3D phantom using `GLMakie.jl`.
-```@example phantom_visual
+```julia-repl
 using GLMakie
 
-@time F_true = zeros(Float64, m, m, m);
+F = Array{Float64}(undef, m, m, m);
+xray_recons!(F, a_sol, X, Q, γ);
+
+F_true = zeros(Float64, m, m, m);
 for iz in 1:m
     z3 = 2.0 * (iz - 1) / (m - 1) - 1.0
     for iy in 1:m

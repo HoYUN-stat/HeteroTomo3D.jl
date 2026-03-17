@@ -20,12 +20,6 @@ julia> unicdf(1.0)
 """
 unicdf(x::Float64) = 0.5 * (1 + erf(x / SQRT2)) #CDF of N(0, 1)
 
-# """
-#     unicdf(x::Float64, y::Float64) -> Float64
-
-# Accurate version of `unicdf(y) - unicdf(x)`.
-# """
-# unicdf(x::Float64, y::Float64) = 0.5 * erf(x / SQRT2, y / SQRT2)
 
 """
     antid_erf(z::Float64)::Float64

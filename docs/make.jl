@@ -17,8 +17,9 @@ makedocs(;
         "Quaternions" => "quaternions.md",
         "Data Types" => "datatypes.md",
         "Tomographic Kernels" => "tomokernel.md",
-        "3D Reconstruction" => "meanestimation.md"
+        "Tutorial" => "meanestimation.md"
     ],
+    # doctest=false,
 )
 
 deploydocs(;

@@ -19,7 +19,7 @@ include("reconstruction.jl")
 
 export UnitQuaternion, projection_axis, planar_rotation, shortest_arc, rotate
 export EvaluationGrid, rand_evaluation_grid, QuaternionGrid, rand_quaternion_grid, BlockDiagonal, zero_block_diag, undef_block_diag, rand_block_diag, block_outer, ⊙, blocksizes
-export antid_erf, affine_erf, bvncdf
+export unicdf, antid_erf, affine_erf, bvncdf
 export backproject, collinear_inner_product, noncollinear_inner_product, inner_product, grid_to_real, build_gram_matrix!
 export AbstractBlockTensor, BlockOuter, AdjointBlockOuter, CovFwdTensor, AdjointCovFwdTensor
 export conj_lanczos, fpca

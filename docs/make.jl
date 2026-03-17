@@ -17,7 +17,10 @@ makedocs(;
         "Quaternions" => "quaternions.md",
         "Data Types" => "datatypes.md",
         "Tomographic Kernels" => "tomokernel.md",
-        "Tutorial" => "meanestimation.md"
+        "Tutorials" => [
+            # "Future Tutorial Title" => "future_tutorial.md",
+            "Noiseless Reconstruction" => "invrecons.md",
+        ]
     ],
     # doctest=false,
 )

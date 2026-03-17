@@ -103,7 +103,7 @@ fig = Figure(size=(1000, 500))
 bounds = (-1.0, 1.0)
 
 ax1 = Axis3(fig[1, 1], title="True 3D Phantom", aspect=:data)
-# levels=6 draws 6 distinct density shells. alpha=0.4 makes them glassy so you can see inside.
+# alpha=0.4 to see inside.
 vol1 = contour!(ax1, bounds, bounds, bounds, F_true,
     levels=6,
     colormap=:viridis,
@@ -122,5 +122,3 @@ display(fig)
 
 save_path = joinpath("..", "docs", "src", "assets", "mean_recons.png")
 save(save_path, fig)
-
-display(fig)

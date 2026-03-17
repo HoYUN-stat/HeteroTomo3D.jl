@@ -2,8 +2,8 @@
 CurrentModule = HeteroTomo3D
 ```
 
-# Mean Estimation
-This tutorial demonstrates how to **estimate the 3D mean function** from tomographic projections using the **RKHS representer theorem** and **iterative Krylov subspace solvers**. 
+# Noiseless 3D Reconstruction
+This tutorial demonstrates how to **estimate the 3D function** from tomographic projections using the **RKHS representer theorem** and **iterative Krylov subspace solvers**. 
 
 To maintain a clear focus on the solver mechanics, this example uses a **deterministic inverse problem framework** that excludes measurement noise and functional randomness.
 
@@ -133,4 +133,4 @@ display(fig)
 
 Executing this code will open an interactive 3D window allowing you to explore the reconstructed density contours. For the complete, runnable script, please refer to `examples/test_mean_reconstruction.jl` in the package repository.
 
-![3D Forward Simulation](assets/mean_recons.png)
+![3D Reconstruction Simulation](assets/mean_recons.png)

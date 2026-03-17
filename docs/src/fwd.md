@@ -1,28 +1,29 @@
-# cd("examples")
-# ] activate .
+```@meta
+CurrentModule = HeteroTomo3D
+```
 
-using HeteroTomo3D
-using LinearAlgebra
-using GLMakie
-using Distributions
-using Random
+# Variability Visualization
+This tutorial demonstrates how to generate **random 3D phantoms** and simulate the **3D X-ray transform** with measurement noise, which serves as the foundation for our covariance estimation framework.
 
+## Data Generation
 
-# --------------------------------------------------------------------
-#          Global Parameters (Deterministic Noiseless Setting)
-# --------------------------------------------------------------------
-n = 3       # Single Deterministic Function
-r = 2      # Number of quaternions
-s = 50      # Number of evaluation points per viewing angles
-m = 100      # Resolution for reconstruction
+### Setup Global Parameters
+```julia
+n = 3       # Number of sample paths (functions)
+r = 2       # Number of viewing angles (quaternions)
+s = 50      # Number of evaluation points per viewing angle
+m = 100     # Resolution for dense evaluation and plotting
 L = 4       # Number of Gaussian components in the phantom
-λ = 0.2    # Covariance level for weights
-σ = 0.01   # Noise level
+λ = 0.2     # Covariance scaling level for weights
+σ = 0.01    # Measurement noise level
+```
 
-# --------------------------------------------------------------------
-#                      Data Generation
-# --------------------------------------------------------------------
-# Generate Wrappers for 3D Phantom
+### Random 3D Phantom and X-ray Transform
+Instead of a single function, we draw `n` different sets of weights from a Multivariate Normal distribution to represent biological or conformational heterogeneity.
+
+```julia
+using HeteroTomo3D, LinearAlgebra, Distributions, Random
+
 centers = [
     (0.3, 0.3, 0.3),
     (-0.3, -0.3, 0.3),
@@ -42,16 +43,21 @@ phantom = KernelPhantom3D(weights, centers, gammas)
 # Generate the forward setup
 X = rand_evaluation_grid(s, r, n, m; seed=123)    # Evaluation grid for the forward operator
 Q = rand_quaternion_grid(r, n; seed=123)          # Random quaternion grid for the forward operator
-projections = xray_transform(phantom, X, Q) # Size: (s, r, n)
+projections = xray_transform(phantom, X, Q)       # Size: (s, r, n)
 
 # Add noise to the projections
 Random.seed!(456)
 noise = σ * randn(size(projections))
 noisy_projections = projections + noise
+```
 
+## Visualizing the Ensemble
+We can visually verify our forward model by extracting the continuous evaluation functions and plotting the mean function alongside the realized sample paths.
 
+```julia
+using GLMakie
 
-# Evaluate dense 3D phantom
+# Helper: Evaluate dense 3D phantom
 function evaluate_phantom(w_vec, centers, gammas, m)
     F = zeros(Float64, m, m, m)
     for iz in 1:m, iy in 1:m, ix in 1:m
@@ -71,7 +77,7 @@ function evaluate_phantom(w_vec, centers, gammas, m)
     return F
 end
 
-# Evaluate dense 2D projection
+# Helper: Evaluate dense 2D projection
 function dense_projection(w_vec, centers, gammas, q, m)
     img = zeros(Float64, m, m)
     for ix in 1:m, iy in 1:m
@@ -91,13 +97,8 @@ end
 F_mean = evaluate_phantom(mean_vec, centers, gammas, m);
 F_reals = [evaluate_phantom(weights[:, i], centers, gammas, m) for i in 1:n];
 
-# --------------------------------------------------------------------
-#                      Visualization
-# --------------------------------------------------------------------
-
 fig = Figure(size=(1600, 1000), fontsize=20)
 bounds = (-1.0, 1.0)
-
 
 vol_min = min(minimum(F_mean), minimum(minimum.(F_reals)))
 vol_max = max(maximum(F_mean), maximum(maximum.(F_reals)))
@@ -106,6 +107,7 @@ vol_levels = range(vol_min, vol_max, length=7)[2:end-1]
 # --- Mean Phantom (fig[1, 1]) ---
 ax_mean = Axis3(fig[1, 1], title=L"\mathbb{E}[f_{1}]", aspect=:data)
 vol_plt = contour!(ax_mean, bounds, bounds, bounds, F_mean, levels=vol_levels, colormap=:viridis, alpha=0.4, colorrange=(vol_min, vol_max))
+
 
 # --- Projection Axes Sphere (fig[2, 1]) ---
 ax_sph = Axis3(fig[2, 1], title=L"\mathbf{R}_{ij}^{\top} \mathbf{e}_{3}", aspect=:data)
@@ -172,8 +174,8 @@ for j in 1:r
     end
 end
 Colorbar(fig[2:r+1, n+2], hm_plt, label="Integrated Intensity")
+```
 
-display(fig)
+Executing this code will open an interactive 3D window allowing you to explore the randomly realized densities and their corresponding 2D projection angles. For the complete, runnable script, please refer to `examples/test_fwd.jl` in the package repository.
 
-save_path = joinpath("..", "docs", "src", "assets", "fwd_data.png")
-save(save_path, fig)
+![3D Forward Simulation](assets/fwd_data.png)

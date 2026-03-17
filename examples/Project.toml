@@ -1,6 +1,7 @@
 [deps]
 BlockArrays = "8e7c35d0-a365-5155-bbbb-fb81a777f24e"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
 HeteroTomo3D = "263a12c5-01a3-4d1f-967a-ba60fd634f9a"
 Krylov = "ba0b0d4f-ebba-5204-a429-3ac8c609bfb7"

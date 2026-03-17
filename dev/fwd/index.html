@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Variability Visualization · HeteroTomo3D.jl</title><meta name="title" content="Variability Visualization · HeteroTomo3D.jl"/><meta property="og:title" content="Variability Visualization · HeteroTomo3D.jl"/><meta property="twitter:title" content="Variability Visualization · HeteroTomo3D.jl"/><meta name="description" content="Documentation for HeteroTomo3D.jl."/><meta property="og:description" content="Documentation for HeteroTomo3D.jl."/><meta property="twitter:description" content="Documentation for HeteroTomo3D.jl."/><meta property="og:url" content="https://HoYUN-stat.github.io/HeteroTomo3D.jl/fwd/"/><meta property="twitter:url" content="https://HoYUN-stat.github.io/HeteroTomo3D.jl/fwd/"/><link rel="canonical" href="https://HoYUN-stat.github.io/HeteroTomo3D.jl/fwd/"/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">HeteroTomo3D.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../quaternions/">Quaternions</a></li><li><a class="tocitem" href="../datatypes/">Data Types</a></li><li><a class="tocitem" href="../tomokernel/">Tomographic Kernels</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../invrecons/">Noiseless Reconstruction</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Variability Visualization</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Variability Visualization</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/HoYUN-stat/HeteroTomo3D.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/HoYUN-stat/HeteroTomo3D.jl/blob/main/docs/src/fwd.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Variability-Visualization"><a class="docs-heading-anchor" href="#Variability-Visualization">Variability Visualization</a><a id="Variability-Visualization-1"></a><a class="docs-heading-anchor-permalink" href="#Variability-Visualization" title="Permalink"></a></h1><p>This tutorial demonstrates how to generate <strong>random 3D phantoms</strong> and simulate the <strong>3D X-ray transform</strong> with measurement noise, which serves as the foundation for our covariance estimation framework.</p><h2 id="Data-Generation"><a class="docs-heading-anchor" href="#Data-Generation">Data Generation</a><a id="Data-Generation-1"></a><a class="docs-heading-anchor-permalink" href="#Data-Generation" title="Permalink"></a></h2><h3 id="Setup-Global-Parameters"><a class="docs-heading-anchor" href="#Setup-Global-Parameters">Setup Global Parameters</a><a id="Setup-Global-Parameters-1"></a><a class="docs-heading-anchor-permalink" href="#Setup-Global-Parameters" title="Permalink"></a></h3><pre><code class="language-julia hljs">n = 3       # Number of sample paths (functions)
+r = 2       # Number of viewing angles (quaternions)
+s = 50      # Number of evaluation points per viewing angle
+m = 100     # Resolution for dense evaluation and plotting
+L = 4       # Number of Gaussian components in the phantom
+λ = 0.2     # Covariance scaling level for weights
+σ = 0.01    # Measurement noise level</code></pre><h3 id="Random-3D-Phantom-and-X-ray-Transform"><a class="docs-heading-anchor" href="#Random-3D-Phantom-and-X-ray-Transform">Random 3D Phantom and X-ray Transform</a><a id="Random-3D-Phantom-and-X-ray-Transform-1"></a><a class="docs-heading-anchor-permalink" href="#Random-3D-Phantom-and-X-ray-Transform" title="Permalink"></a></h3><p>Instead of a single function, we draw <code>n</code> different sets of weights from a Multivariate Normal distribution to represent biological or conformational heterogeneity.</p><pre><code class="language-julia hljs">using HeteroTomo3D, LinearAlgebra, Distributions, Random
+
+centers = [
+    (0.3, 0.3, 0.3),
+    (-0.3, -0.3, 0.3),
+    (-0.4, 0.4, -0.4),
+    (0.3, -0.3, -0.3)
+]
+gammas = [5.0, 4.0, 6.0, 4.0] .* 2
+
+# Draw random weights
+mean_vec = [1.0, 0.8, 0.6, 0.4] .* 2
+cov_matrix = λ * I(L) # Isotropic covariance for simplicity
+Random.seed!(42)
+weights = rand(MvNormal(mean_vec, cov_matrix), n) # Size: (L, n)
+
+phantom = KernelPhantom3D(weights, centers, gammas)
+
+# Generate the forward setup
+X = rand_evaluation_grid(s, r, n, m; seed=123)    # Evaluation grid for the forward operator
+Q = rand_quaternion_grid(r, n; seed=123)          # Random quaternion grid for the forward operator
+projections = xray_transform(phantom, X, Q)       # Size: (s, r, n)
+
+# Add noise to the projections
+Random.seed!(456)
+noise = σ * randn(size(projections))
+noisy_projections = projections + noise</code></pre><h2 id="Visualizing-the-Ensemble"><a class="docs-heading-anchor" href="#Visualizing-the-Ensemble">Visualizing the Ensemble</a><a id="Visualizing-the-Ensemble-1"></a><a class="docs-heading-anchor-permalink" href="#Visualizing-the-Ensemble" title="Permalink"></a></h2><p>We can visually verify our forward model by extracting the continuous evaluation functions and plotting the mean function alongside the realized sample paths.</p><pre><code class="language-julia hljs">using GLMakie
+
+# Helper: Evaluate dense 3D phantom
+function evaluate_phantom(w_vec, centers, gammas, m)
+    F = zeros(Float64, m, m, m)
+    for iz in 1:m, iy in 1:m, ix in 1:m
+        z1 = 2.0 * (ix - 1) / (m - 1) - 1.0
+        z2 = 2.0 * (iy - 1) / (m - 1) - 1.0
+        z3 = 2.0 * (iz - 1) / (m - 1) - 1.0
+        if z1^2 + z2^2 + z3^2 &lt;= 1.0
+            val = 0.0
+            for l in eachindex(centers)
+                c = centers[l]
+                dist2 = (z1 - c[1])^2 + (z2 - c[2])^2 + (z3 - c[3])^2
+                val += w_vec[l] * exp(-gammas[l] * dist2)
+            end
+            F[ix, iy, iz] = val
+        end
+    end
+    return F
+end
+
+# Helper: Evaluate dense 2D projection
+function dense_projection(w_vec, centers, gammas, q, m)
+    img = zeros(Float64, m, m)
+    for ix in 1:m, iy in 1:m
+        x_real = HeteroTomo3D.grid_to_real((ix, iy), m, Float64)
+        if x_real[1]^2 + x_real[2]^2 &lt;= 1.0
+            val = 0.0
+            for l in eachindex(centers)
+                val += w_vec[l] * backproject(q, x_real, centers[l], gammas[l])
+            end
+            img[ix, iy] = val
+        end
+    end
+    return img
+end
+
+# Evaluate all 3D volumes
+F_mean = evaluate_phantom(mean_vec, centers, gammas, m);
+F_reals = [evaluate_phantom(weights[:, i], centers, gammas, m) for i in 1:n];
+
+fig = Figure(size=(1600, 1000), fontsize=20)
+bounds = (-1.0, 1.0)
+
+vol_min = min(minimum(F_mean), minimum(minimum.(F_reals)))
+vol_max = max(maximum(F_mean), maximum(maximum.(F_reals)))
+vol_levels = range(vol_min, vol_max, length=7)[2:end-1]
+
+# --- Mean Phantom (fig[1, 1]) ---
+ax_mean = Axis3(fig[1, 1], title=L&quot;\mathbb{E}[f_{1}]&quot;, aspect=:data)
+vol_plt = contour!(ax_mean, bounds, bounds, bounds, F_mean, levels=vol_levels, colormap=:viridis, alpha=0.4, colorrange=(vol_min, vol_max))
+
+
+# --- Projection Axes Sphere (fig[2, 1]) ---
+ax_sph = Axis3(fig[2, 1], title=L&quot;\mathbf{R}_{ij}^{\top} \mathbf{e}_{3}&quot;, aspect=:data)
+hidedecorations!(ax_sph)
+
+# Lock the limits to not warp the column layout
+limits!(ax_sph, -1.5, 1.5, -1.5, 1.5, -1.5, 1.5)
+
+# Draw meshpoints for unit sphere
+mesh!(ax_sph, Sphere(Point3f(0.0, 0.0, 0.0), 1.0f0), color=(:grey, 0.1), transparency=true)
+wireframe!(ax_sph, Sphere(Point3f(0.0, 0.0, 0.0), 1.0f0), color=(:black, 0.2), linewidth=1, transparency=true)
+
+for i in 1:n
+    for j in 1:r
+        v = projection_axis(Q[j, i])
+        arrows3d!(ax_sph, [0.0], [0.0], [0.0], [v[1]], [v[2]], [v[3]], color=:blue, shaftradius=0.015, tipradius=0.04, tiplength=0.1)
+        scatter!(ax_sph, [v[1]], [v[2]], [v[3]], color=:red, markersize=8)
+        text!(ax_sph, v[1] * 1.3, v[2] * 1.3, v[3] * 1.3, text=&quot;($i,$j)&quot;, color=:black, align=(:center, :center), fontsize=20)
+    end
+end
+
+# --- Parameters Text (fig[3, 1]) ---
+param_text = &quot;• n = $n \n&quot; *
+             &quot;• r = $r \n&quot; *
+             &quot;• s = $s \n&quot; *
+             &quot;• σ = $σ&quot;
+
+
+gl_text = fig[3, 1] = GridLayout(halign=:center, valign=:center, tellheight=false, tellwidth=false)
+Box(gl_text[1, 1], color=(:black, 0.05), strokecolor=(:black, 0.5), strokewidth=1)
+Label(gl_text[1, 1], param_text, justification=:left, padding=(15, 15, 15, 15))
+
+# --- Row 1 (Right): 3D Volumes ---
+# n Realizations
+for i in 1:n
+    ax_vol = Axis3(fig[1, i+1], title=L&quot;f_{%$i}&quot;, aspect=:data)
+    contour!(ax_vol, bounds, bounds, bounds, F_reals[i], levels=vol_levels, colormap=:viridis, alpha=0.4, colorrange=(vol_min, vol_max))
+end
+Colorbar(fig[1, n+2], vol_plt, label=&quot;Density&quot;)
+
+# Evaluate all 2D dense projections
+imgs = [dense_projection(weights[:, i], centers, gammas, Q[j, i], m) for i in 1:n, j in 1:r]
+proj_min = minimum(minimum.(imgs))
+proj_max = maximum(maximum.(imgs))
+
+# --- Row 2 &amp; 3: Dense 2D Projections + Scatter Grids ---
+hm_plt = nothing
+for j in 1:r
+    for i in 1:n
+        ax_proj = Axis(fig[j+1, i+1], title=L&quot;\mathscr{P} f_{%$i} (\mathbf{R}_{%$i%$j}, \cdot) + \text{Noise}&quot;, aspect=DataAspect())
+        hidedecorations!(ax_proj)
+
+        # Dense background projection
+        img = imgs[i, j]
+        hm_plt = heatmap!(ax_proj, 1:m, 1:m, img, colormap=:greys, colorrange=(proj_min, proj_max))
+
+        # Overlay the evaluation grid points
+        eval_points = X.blocks[:, j, i]
+        xs = [pt[1] for pt in eval_points]
+        ys = [pt[2] for pt in eval_points]
+
+        # Scatter the noisy measurements
+        scatter!(ax_proj, xs, ys, color=:red, markersize=10, strokewidth=1, strokecolor=:white)
+    end
+end
+Colorbar(fig[2:r+1, n+2], hm_plt, label=&quot;Integrated Intensity&quot;)</code></pre><p>Executing this code will open an interactive 3D window allowing you to explore the randomly realized densities and their corresponding 2D projection angles. For the complete, runnable script, please refer to <code>examples/test_fwd.jl</code> in the package repository.</p><p><img src="../assets/fwd_data.png" alt="3D Forward Simulation"/></p></article><nav class="docs-footer"><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Tuesday 17 March 2026 19:39">Tuesday 17 March 2026</span>. Using Julia version 1.12.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

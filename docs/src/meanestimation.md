@@ -3,28 +3,26 @@ CurrentModule = HeteroTomo3D
 ```
 
 # Mean Estimation
-This section covers the estimation of the 3D mean function using the RKHS representer theorem and direct linear solvers.
+This tutorial demonstrates how to **estimate the 3D mean function** from tomographic projections using the **RKHS representer theorem** and **iterative Krylov subspace solvers**. 
+
+To maintain a clear focus on the solver mechanics, this example uses a **deterministic inverse problem framework** that excludes measurement noise and functional randomness.
 
 ## Data Generation
-```julia-repl
-using HeteroTomo3D, BlockArrays, LinearAlgebra
 
-
-# --------------------------------------------------------------------
-#          Global Parameters (Deterministic Noiseless Setting)
-# --------------------------------------------------------------------
+### Setup Global Parameters
+```julia
 n = 1       # Single Deterministic Function
 r = 50      # Number of quaternions
 s = 100      # Number of evaluation points per viewing angles
 m = 50      # Resolution for reconstruction
 L = 4       # Number of Gaussian components in the phantom
 γ = 10.0    # Kernel bandwidth for RKHS framework
+```
 
+### 3D Phantom and X-ray Transform
+```julia
+using HeteroTomo3D, BlockArrays, LinearAlgebra
 
-# --------------------------------------------------------------------
-#                      Data Generation
-# --------------------------------------------------------------------
-# Generate Wrappers for 3D Phantom
 centers = [
     (0.3, 0.3, 0.3),
     (-0.3, -0.3, 0.3),
@@ -50,7 +48,7 @@ The mean function is estimated by solving the system
 (\mathbf{K} + \lambda \mathbf{I}) \mathbf{a} = \mathbf{y}.
 ```
 
-```julia-repl
+```julia
 block_sizes = repeat([s * r], n);
 K = BlockMatrix{Float64}(undef, block_sizes, block_sizes);
 build_gram_matrix!(K, X, Q, γ);
@@ -67,15 +65,15 @@ stats_mean = Krylov.statistics(workspace_mean)
 ```
 
 ## 3D Reconstruction
-Once the coefficients ``\mathbf{a}`` are found, the continuous 3D volume is reconstructed via the evaluation tensor action.
+Once the representer coefficients ``\mathbf{a}`` are computed, the estimated continuous 3D function can be evaluated over a regular voxel grid to form the final volume.
 
 ```@docs
 xray_recons
 xray_recons!
 ```
 
-We visualize this voxel alongside the true 3D phantom using `GLMakie.jl`.
-```julia-repl
+The resulting reconstructed volume can then be visualized alongside the ground-truth 3D phantom using `GLMakie.jl`.
+```julia
 using GLMakie
 
 F = Array{Float64}(undef, m, m, m);
@@ -116,7 +114,7 @@ fig = Figure(size=(1000, 500))
 bounds = (-1.0, 1.0)
 
 ax1 = Axis3(fig[1, 1], title="True 3D Phantom", aspect=:data)
-# levels=6 draws 6 distinct density shells. alpha=0.4 makes them glassy so you can see inside.
+
 vol1 = contour!(ax1, bounds, bounds, bounds, F_true,
     levels=6,
     colormap=:viridis,
@@ -133,6 +131,6 @@ Colorbar(fig[1, 3], vol2, label="Density")
 display(fig)
 ```
 
-This will generate the interactive 3D visualization.
+Executing this code will open an interactive 3D window allowing you to explore the reconstructed density contours. For the complete, runnable script, please refer to `examples/test_mean_reconstruction.jl` in the package repository.
 
 ![3D Forward Simulation](assets/mean_recons.png)

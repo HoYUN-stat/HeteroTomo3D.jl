@@ -18,7 +18,7 @@ makedocs(;
         "Data Types" => "datatypes.md",
         "Tomographic Kernels" => "tomokernel.md",
         "Tutorials" => [
-            # "Future Tutorial Title" => "future_tutorial.md",
+            "Variability Visualization" => "fwd.md",
             "Noiseless Reconstruction" => "invrecons.md",
         ]
     ],

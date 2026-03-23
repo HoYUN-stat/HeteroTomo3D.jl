@@ -20,6 +20,8 @@ makedocs(;
         "Tutorials" => [
             "Variability Visualization" => "fwd.md",
             "Noiseless Reconstruction" => "invrecons.md",
+            "Noisy Reconstruction" => "noisyrecons.md",
+            "Covariance Reconstruction" => "noisycov.md",
         ]
     ],
     # doctest=false,

@@ -9,7 +9,7 @@ using Random
 
 
 # --------------------------------------------------------------------
-#          Global Parameters (Deterministic Noiseless Setting)
+#          Global Parameters (Noisy Setting)
 # --------------------------------------------------------------------
 n = 3       # Single Deterministic Function
 r = 2      # Number of quaternions

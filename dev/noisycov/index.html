@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Covariance Reconstruction · HeteroTomo3D.jl</title><meta name="title" content="Covariance Reconstruction · HeteroTomo3D.jl"/><meta property="og:title" content="Covariance Reconstruction · HeteroTomo3D.jl"/><meta property="twitter:title" content="Covariance Reconstruction · HeteroTomo3D.jl"/><meta name="description" content="Documentation for HeteroTomo3D.jl."/><meta property="og:description" content="Documentation for HeteroTomo3D.jl."/><meta property="twitter:description" content="Documentation for HeteroTomo3D.jl."/><meta property="og:url" content="https://HoYUN-stat.github.io/HeteroTomo3D.jl/noisycov/"/><meta property="twitter:url" content="https://HoYUN-stat.github.io/HeteroTomo3D.jl/noisycov/"/><link rel="canonical" href="https://HoYUN-stat.github.io/HeteroTomo3D.jl/noisycov/"/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">HeteroTomo3D.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../quaternions/">Quaternions</a></li><li><a class="tocitem" href="../datatypes/">Data Types</a></li><li><a class="tocitem" href="../tomokernel/">Tomographic Kernels</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../fwd/">Variability Visualization</a></li><li><a class="tocitem" href="../invrecons/">Noiseless Reconstruction</a></li><li><a class="tocitem" href="../noisyrecons/">Noisy Reconstruction</a></li><li class="is-active"><a class="tocitem" href>Covariance Reconstruction</a><ul class="internal"><li><a class="tocitem" href="#Data-Generation"><span>Data Generation</span></a></li><li><a class="tocitem" href="#Representer-Theorem-Solver-via-MINRES"><span>Representer Theorem Solver via MINRES</span></a></li><li><a class="tocitem" href="#Perform-Functional-PCA"><span>Perform Functional PCA</span></a></li><li><a class="tocitem" href="#3D-Reconstruction"><span>3D Reconstruction</span></a></li></ul></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Covariance Reconstruction</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Covariance Reconstruction</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/HoYUN-stat/HeteroTomo3D.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/HoYUN-stat/HeteroTomo3D.jl/blob/main/docs/src/noisycov.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Noisy-3D-Reconstruction"><a class="docs-heading-anchor" href="#Noisy-3D-Reconstruction">Noisy 3D Reconstruction</a><a id="Noisy-3D-Reconstruction-1"></a><a class="docs-heading-anchor-permalink" href="#Noisy-3D-Reconstruction" title="Permalink"></a></h1><p>As a final tutorial, we demonstrate how to <strong>estimate the covariance oprator of random 3D function</strong>, under measurement noise and functional randomness.</p><h2 id="Data-Generation"><a class="docs-heading-anchor" href="#Data-Generation">Data Generation</a><a id="Data-Generation-1"></a><a class="docs-heading-anchor-permalink" href="#Data-Generation" title="Permalink"></a></h2><h3 id="Setup-Global-Parameters"><a class="docs-heading-anchor" href="#Setup-Global-Parameters">Setup Global Parameters</a><a id="Setup-Global-Parameters-1"></a><a class="docs-heading-anchor-permalink" href="#Setup-Global-Parameters" title="Permalink"></a></h3><p>Due to computational complexity, we fix <span>$\gamma=6$</span> from the previous tutorial.</p><pre><code class="language-julia hljs">n = 30       # Single Deterministic Function
+r = 5      # Number of quaternions
+s = 20      # Number of evaluation points per viewing angles
+m = 50      # Resolution for reconstruction
+L = 4       # Number of Gaussian components in the phantom
+λ = 0.2    # Covariance level for weights
+σ = 0.01   # Noise level
+gamma_val = 6.0    # Kernel bandwidth for RKHS framework</code></pre><h3 id="3D-Phantom-and-X-ray-Transform"><a class="docs-heading-anchor" href="#3D-Phantom-and-X-ray-Transform">3D Phantom and X-ray Transform</a><a id="3D-Phantom-and-X-ray-Transform-1"></a><a class="docs-heading-anchor-permalink" href="#3D-Phantom-and-X-ray-Transform" title="Permalink"></a></h3><pre><code class="language-julia hljs">using HeteroTomo3D, BlockArrays, LinearAlgebra
+
+centers = [
+    (0.3, 0.3, 0.3),
+    (-0.3, -0.3, 0.3),
+    (-0.4, 0.4, -0.4),
+    (0.3, -0.3, -0.3)
+]
+gammas = [5.0, 4.0, 6.0, 4.0] .* 2
+
+# Draw random weights
+mean_vec = [1.0, 0.8, 0.6, 0.4] .* 2
+cov_matrix = λ * I(L) # Isotropic covariance for simplicity
+Random.seed!(42)
+weights = rand(MvNormal(mean_vec, cov_matrix), n) # Size: (L, n)
+
+phantom = KernelPhantom3D(weights, centers, gammas)
+
+# Generate the forward setup
+X = rand_evaluation_grid(s, r, n, m; seed=123)    # Evaluation grid for the forward operator
+Q = rand_quaternion_grid(r, n; seed=123)          # Random quaternion grid for the forward operator
+projections = xray_transform(phantom, X, Q) # Size: (s, r, n)
+
+# Add noise to the projections
+Random.seed!(456)
+noise = σ * randn(size(projections))
+noisy_projections = projections + noise
+y = vec(noisy_projections); # Flatten the projections to a vector for the linear system</code></pre><h2 id="Representer-Theorem-Solver-via-MINRES"><a class="docs-heading-anchor" href="#Representer-Theorem-Solver-via-MINRES">Representer Theorem Solver via MINRES</a><a id="Representer-Theorem-Solver-via-MINRES-1"></a><a class="docs-heading-anchor-permalink" href="#Representer-Theorem-Solver-via-MINRES" title="Permalink"></a></h2><p>We solve the representer theorem for covariance estimation.</p><p class="math-container">\[(\mathbf{K} \odot \mathbf{K} + \lambda \mathbf{I}) \mathbf{A} = \mathbf{y} \odot \mathbf{y}.\]</p><pre><code class="language-julia hljs">block_sizes = repeat([s * r], n);
+K = BlockMatrix{Float64}(undef, block_sizes, block_sizes);
+build_gram_matrix!(K, X, Q, γ);
+
+y_centered = y
+y_block = BlockVector(y_centered, block_sizes)
+Y = y_block ⊙ y_block
+
+using Krylov
+
+K_tens = CovFwdTensor(K)
+Y_zero = zero_block_diag(block_sizes)
+kc_cov = KrylovConstructor(Y_zero)
+workspace_cov = MinresWorkspace(kc_cov)
+
+
+println(&quot;Processing Covariance Estimation for γ = $gamma_val&quot;)
+# MINRES solver
+@time minres!(workspace_cov, K_tens, Y; history=true, itmax=20)
+A_sol = Krylov.solution(workspace_cov)</code></pre><h2 id="Perform-Functional-PCA"><a class="docs-heading-anchor" href="#Perform-Functional-PCA">Perform Functional PCA</a><a id="Perform-Functional-PCA-1"></a><a class="docs-heading-anchor-permalink" href="#Perform-Functional-PCA" title="Permalink"></a></h2><p>Once the representer coefficients <span>$\mathbf{A}$</span> are computed, We then perform fPCA to extract the representing coefficients of leading eigenfunctions and reconstruct their corresponding 3D functions.</p><pre><code class="language-julia hljs">println(&quot;Performing Functional PCA&quot;)
+Λ, V = fpca(10, A_sol, K; itmax=100)
+
+F_eigs = [Array{Float64}(undef, m, m, m) for _ in 1:3]
+for k in 1:3
+    println(&quot;Reconstructing Eigenfunction $k&quot;)
+    @time xray_recons!(F_eigs[k], V[:, k], X, Q, gamma_val)
+end</code></pre><h2 id="3D-Reconstruction"><a class="docs-heading-anchor" href="#3D-Reconstruction">3D Reconstruction</a><a id="3D-Reconstruction-1"></a><a class="docs-heading-anchor-permalink" href="#3D-Reconstruction" title="Permalink"></a></h2><p>Once the representer coefficients <span>$\mathbf{a}$</span> are computed, the estimated continuous 3D function can be evaluated over a regular voxel grid to form the final volume.</p><p>The resulting reconstructed volume can then be visualized alongside the ground-truth 3D phantom using <code>GLMakie.jl</code>.</p><pre><code class="language-julia hljs">using GLMakie
+
+fig = Figure(size=(2400, 1000))
+bounds = (-1.0, 1.0)
+
+gl_top = fig[1:2, 1] = GridLayout()
+gl_scree = fig[1, 2:3] = GridLayout()
+gl_bot = fig[2, 2:3] = GridLayout()
+
+# Top row
+ax1 = Axis3(gl_top[1, 1], title=&quot;True&quot;, aspect=:data)
+# alpha=0.4 to see inside.
+vol1 = contour!(ax1, bounds, bounds, bounds, F_true,
+    levels=6,
+    colormap=:viridis,
+    alpha=0.4)
+
+ax_mean = Axis3(gl_top[2, 1], title=&quot;Reconstructed Mean\nRel. Error (L2): $(round(rel_error * 100, digits=2))%&quot;, aspect=:data)
+vol_mean = contour!(ax_mean, bounds, bounds, bounds, F_recon, levels=6, colormap=:viridis, alpha=0.4)
+Colorbar(gl_top[1:2, 2], vol_mean, label=&quot;Density&quot;)
+
+ax_scree = Axis(gl_scree[1, 1], title=&quot;Scree Plot&quot;, xlabel=&quot;Principal Component&quot;, ylabel=&quot;Eigenvalue&quot;)
+scatterlines!(ax_scree, 1:10, Λ, color=:blue, markersize=10)
+
+# Bottom row (Eigenfunctions)
+global_max_val = maximum(maximum(abs, F) for F in F_eigs)
+global_max_val = global_max_val == 0 ? 1.0 : global_max_val
+
+# Avoid zero level to prevent a massive block covering the whole volume
+eig_levels = [-0.8, -0.6, -0.4, -0.2, 0.2, 0.4, 0.6, 0.8] .* global_max_val
+
+vol_eig = nothing
+for k in 1:3
+    ax_eig = Axis3(gl_bot[1, k], title=&quot;Eigenfunction $k&quot;, aspect=:data)
+    F_eig = F_eigs[k]
+    vol_eig = contour!(ax_eig, bounds, bounds, bounds, F_eig, levels=eig_levels, colormap=:balance, colorrange=(-global_max_val, global_max_val), alpha=0.3)
+end
+Colorbar(gl_bot[1, 4], vol_eig, label=&quot;Value&quot;)
+
+display(fig)
+
+save_path = joinpath(&quot;..&quot;, &quot;docs&quot;, &quot;src&quot;, &quot;assets&quot;, &quot;cov_fpca_results.png&quot;)
+save(save_path, fig)</code></pre><p>Executing this code will open an interactive 3D window allowing you to explore the reconstructed density contours. For the complete, runnable script, please refer to <code>examples/test_cov.jl</code> in the package repository.</p><p><img src="../assets/cov_fpca_results.png" alt="Covariance Estimation"/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../noisyrecons/">« Noisy Reconstruction</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Thursday 26 March 2026 16:15">Thursday 26 March 2026</span>. Using Julia version 1.12.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
